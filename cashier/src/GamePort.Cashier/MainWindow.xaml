@@ -1,0 +1,309 @@
+<Window x:Class="GamePort.Cashier.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:shell="clr-namespace:System.Windows.Shell;assembly=PresentationFramework"
+        xmlns:vm="clr-namespace:GamePort.Cashier.ViewModels"
+        xmlns:views="clr-namespace:GamePort.Cashier.Views"
+        xmlns:conv="clr-namespace:GamePort.Cashier.Converters"
+        Title="وینگ‌پورت - داشبورد مدیریت"
+        Height="800" Width="1400" MinHeight="650" MinWidth="1100"
+        WindowState="Maximized"
+        WindowStartupLocation="CenterScreen"
+        WindowStyle="None"
+        ResizeMode="CanResize"
+        FlowDirection="RightToLeft"
+        Background="#F9F9FF"
+        FontFamily="{StaticResource Vazirmatn}">
+
+    <shell:WindowChrome.WindowChrome>
+        <shell:WindowChrome CaptionHeight="52" ResizeBorderThickness="6" CornerRadius="0" GlassFrameThickness="0"/>
+    </shell:WindowChrome.WindowChrome>
+
+    <Window.Resources>
+        <BooleanToVisibilityConverter x:Key="BoolToVis"/>
+        <conv:ActiveNavBackgroundConverter x:Key="NavBg"/>
+        <conv:ActiveNavForegroundConverter x:Key="NavFg"/>
+
+        <!-- Window control (traffic light) -->
+        <Style x:Key="TrafficLightButton" TargetType="Button">
+            <Setter Property="Width" Value="12"/>
+            <Setter Property="Height" Value="12"/>
+            <Setter Property="Cursor" Value="Hand"/>
+            <Setter Property="shell:WindowChrome.IsHitTestVisibleInChrome" Value="True"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Ellipse Fill="{TemplateBinding Background}"/>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <!-- Sidebar navigation button -->
+        <Style x:Key="NavButton" TargetType="Button">
+            <Setter Property="Background" Value="Transparent"/>
+            <Setter Property="Cursor" Value="Hand"/>
+            <Setter Property="HorizontalContentAlignment" Value="Stretch"/>
+            <Setter Property="Margin" Value="0,0,0,4"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Border x:Name="Bg" Background="{TemplateBinding Background}" CornerRadius="8" Padding="12,10">
+                            <ContentPresenter HorizontalAlignment="Stretch" VerticalAlignment="Center"/>
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="Bg" Property="Background" Value="#E6E8F3"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <!-- View mapping -->
+        <DataTemplate DataType="{x:Type vm:DashboardViewModel}">
+            <views:DashboardView/>
+        </DataTemplate>
+        <DataTemplate DataType="{x:Type vm:DevicesViewModel}">
+            <views:DevicesView/>
+        </DataTemplate>
+        <DataTemplate DataType="{x:Type vm:FinancialReportsViewModel}">
+            <views:FinancialReportsView/>
+        </DataTemplate>
+        <DataTemplate DataType="{x:Type vm:UsersViewModel}">
+            <views:UsersView/>
+        </DataTemplate>
+        <DataTemplate DataType="{x:Type vm:SettingsViewModel}">
+            <views:SettingsView/>
+        </DataTemplate>
+    </Window.Resources>
+
+    <Grid>
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="260"/>
+            <ColumnDefinition Width="*"/>
+        </Grid.ColumnDefinitions>
+
+        <!-- ================= SIDEBAR (right in RTL) ================= -->
+        <Border Grid.Column="0" Background="#B3FFFFFF" BorderBrush="#C1C6D7" BorderThickness="1,0,0,0">
+            <Grid>
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="*"/>
+                    <RowDefinition Height="Auto"/>
+                </Grid.RowDefinitions>
+
+                <!-- Brand -->
+                <StackPanel Grid.Row="0" Orientation="Horizontal" Margin="16,24,16,32">
+                    <Border Width="40" Height="40" CornerRadius="12" Background="#0058BC">
+                        <TextBlock Style="{StaticResource Icon}" FontSize="22" Foreground="White"
+                                   Text="{StaticResource IconGamepad}"/>
+                    </Border>
+                    <StackPanel Margin="12,0,0,0" VerticalAlignment="Center">
+                        <TextBlock Text="وینگ‌پورت" FontSize="16" FontWeight="SemiBold" Foreground="#181C23"/>
+                        <TextBlock Text="مدیریت گیم‌سنتر" FontSize="12" Foreground="#414755" Margin="0,3,0,0"/>
+                    </StackPanel>
+                </StackPanel>
+
+                <!-- Navigation -->
+                <StackPanel Grid.Row="1" Margin="8,0">
+                    <Button Style="{StaticResource NavButton}" Command="{Binding NavigateToDashboardCommand}"
+                            Background="{Binding CurrentPage, Converter={StaticResource NavBg}, ConverterParameter=Dashboard}">
+                        <StackPanel Orientation="Horizontal">
+                            <TextBlock Style="{StaticResource Icon}" Text="{StaticResource IconDashboard}"
+                                       Foreground="{Binding CurrentPage, Converter={StaticResource NavFg}, ConverterParameter=Dashboard}"/>
+                            <TextBlock Text="داشبورد" FontSize="14" Margin="12,0,0,0" VerticalAlignment="Center"
+                                       Foreground="{Binding CurrentPage, Converter={StaticResource NavFg}, ConverterParameter=Dashboard}"/>
+                        </StackPanel>
+                    </Button>
+                    <Button Style="{StaticResource NavButton}" Command="{Binding NavigateToDevicesCommand}"
+                            Background="{Binding CurrentPage, Converter={StaticResource NavBg}, ConverterParameter=Devices}">
+                        <StackPanel Orientation="Horizontal">
+                            <TextBlock Style="{StaticResource Icon}" Text="{StaticResource IconComputer}"
+                                       Foreground="{Binding CurrentPage, Converter={StaticResource NavFg}, ConverterParameter=Devices}"/>
+                            <TextBlock Text="مدیریت سیستم‌ها" FontSize="14" Margin="12,0,0,0" VerticalAlignment="Center"
+                                       Foreground="{Binding CurrentPage, Converter={StaticResource NavFg}, ConverterParameter=Devices}"/>
+                        </StackPanel>
+                    </Button>
+                    <Button Style="{StaticResource NavButton}" Command="{Binding NavigateToFinancialReportsCommand}"
+                            Background="{Binding CurrentPage, Converter={StaticResource NavBg}, ConverterParameter=Financial}">
+                        <StackPanel Orientation="Horizontal">
+                            <TextBlock Style="{StaticResource Icon}" Text="{StaticResource IconPayments}"
+                                       Foreground="{Binding CurrentPage, Converter={StaticResource NavFg}, ConverterParameter=Financial}"/>
+                            <TextBlock Text="گزارشات مالی" FontSize="14" Margin="12,0,0,0" VerticalAlignment="Center"
+                                       Foreground="{Binding CurrentPage, Converter={StaticResource NavFg}, ConverterParameter=Financial}"/>
+                        </StackPanel>
+                    </Button>
+                    <Button Style="{StaticResource NavButton}" Command="{Binding NavigateToUsersCommand}"
+                            Background="{Binding CurrentPage, Converter={StaticResource NavBg}, ConverterParameter=Users}">
+                        <StackPanel Orientation="Horizontal">
+                            <TextBlock Style="{StaticResource Icon}" Text="{StaticResource IconGroup}"
+                                       Foreground="{Binding CurrentPage, Converter={StaticResource NavFg}, ConverterParameter=Users}"/>
+                            <TextBlock Text="کاربران" FontSize="14" Margin="12,0,0,0" VerticalAlignment="Center"
+                                       Foreground="{Binding CurrentPage, Converter={StaticResource NavFg}, ConverterParameter=Users}"/>
+                        </StackPanel>
+                    </Button>
+                    <Button Style="{StaticResource NavButton}" Command="{Binding NavigateToSettingsCommand}"
+                            Background="{Binding CurrentPage, Converter={StaticResource NavBg}, ConverterParameter=Settings}">
+                        <StackPanel Orientation="Horizontal">
+                            <TextBlock Style="{StaticResource Icon}" Text="{StaticResource IconSettings}"
+                                       Foreground="{Binding CurrentPage, Converter={StaticResource NavFg}, ConverterParameter=Settings}"/>
+                            <TextBlock Text="تنظیمات" FontSize="14" Margin="12,0,0,0" VerticalAlignment="Center"
+                                       Foreground="{Binding CurrentPage, Converter={StaticResource NavFg}, ConverterParameter=Settings}"/>
+                        </StackPanel>
+                    </Button>
+                    <Button Style="{StaticResource NavButton}">
+                        <StackPanel Orientation="Horizontal">
+                            <TextBlock Style="{StaticResource Icon}" Text="{StaticResource IconSupport}"/>
+                            <TextBlock Text="پشتیبانی" FontSize="14" Foreground="#414755" Margin="12,0,0,0" VerticalAlignment="Center"/>
+                        </StackPanel>
+                    </Button>
+                </StackPanel>
+
+                <!-- Logout -->
+                <Border Grid.Row="2" BorderBrush="#C1C6D7" BorderThickness="0,1,0,0" Margin="8,0,8,8" Padding="0,12,0,8">
+                    <Button Style="{StaticResource NavButton}" Command="{Binding LogoutCommand}">
+                        <StackPanel Orientation="Horizontal">
+                            <TextBlock Style="{StaticResource Icon}" Foreground="#BA1A1A" Text="{StaticResource IconLogout}"/>
+                            <TextBlock Text="خروج" FontSize="14" Foreground="#BA1A1A" Margin="12,0,0,0" VerticalAlignment="Center"/>
+                        </StackPanel>
+                    </Button>
+                </Border>
+            </Grid>
+        </Border>
+
+        <!-- ================= MAIN AREA ================= -->
+        <Grid Grid.Column="1">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="52"/>
+                <RowDefinition Height="*"/>
+            </Grid.RowDefinitions>
+
+            <!-- ===== HEADER ===== -->
+            <Border Grid.Row="0" Background="#B3FFFFFF" BorderBrush="#C1C6D7" BorderThickness="0,0,0,1">
+                <Grid Margin="24,0">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="Auto"/>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="Auto"/>
+                    </Grid.ColumnDefinitions>
+
+                    <!-- Right: actions -->
+                    <StackPanel Grid.Column="0" Orientation="Horizontal" VerticalAlignment="Center">
+                        <Grid Margin="0,0,16,0" Cursor="Hand" Width="28" Height="28"
+                              shell:WindowChrome.IsHitTestVisibleInChrome="True">
+                            <TextBlock Style="{StaticResource Icon}" FontSize="22"
+                                       HorizontalAlignment="Center" VerticalAlignment="Center"
+                                       Text="{StaticResource IconNotifications}"/>
+                            <Ellipse Width="8" Height="8" Fill="#FF3B30"
+                                     HorizontalAlignment="Right" VerticalAlignment="Top" Margin="0,1,1,0"/>
+                        </Grid>
+                        <Border Width="1" Height="24" Background="#C1C6D7" VerticalAlignment="Center" Margin="0,0,16,0"/>
+                        <StackPanel Orientation="Horizontal" Cursor="Hand"
+                                    shell:WindowChrome.IsHitTestVisibleInChrome="True">
+                            <StackPanel Margin="0,0,8,0" VerticalAlignment="Center">
+                                <TextBlock Text="{Binding EmployeeName}" FontSize="12" Foreground="#181C23"
+                                           HorizontalAlignment="Left"/>
+                                <TextBlock Text="{Binding EmployeeRole}" FontSize="10" Foreground="#414755"
+                                           HorizontalAlignment="Left"/>
+                            </StackPanel>
+                            <TextBlock Style="{StaticResource Icon}" FontSize="22" Text="{StaticResource IconAccount}"/>
+                        </StackPanel>
+                    </StackPanel>
+
+                    <!-- Center: status + time -->
+                    <StackPanel Grid.Column="1" Orientation="Horizontal" HorizontalAlignment="Center" VerticalAlignment="Center">
+                        <Border Background="#E6E8F3" CornerRadius="16" Padding="12,6" Margin="0,0,24,0">
+                            <StackPanel Orientation="Horizontal">
+                                <Ellipse Width="8" Height="8" Fill="#34C759" Margin="0,0,6,0" VerticalAlignment="Center"/>
+                                <TextBlock Text="Connected" FontSize="12" Foreground="#414755" VerticalAlignment="Center"/>
+                            </StackPanel>
+                        </Border>
+                        <TextBlock Text="۱۲ مهر ۱۴۰۳ - ۱۴:۳۰" FontSize="12" Foreground="#414755" VerticalAlignment="Center"/>
+                    </StackPanel>
+
+                    <!-- Left: title + traffic lights -->
+                    <StackPanel Grid.Column="2" Orientation="Horizontal" VerticalAlignment="Center">
+                        <TextBlock Text="{Binding PageTitle}" FontSize="18" FontWeight="Bold" Foreground="#0058BC"
+                                   VerticalAlignment="Center" Margin="0,0,16,0"/>
+                        <StackPanel Orientation="Horizontal" FlowDirection="LeftToRight" VerticalAlignment="Center">
+                            <Button Style="{StaticResource TrafficLightButton}" Background="#FF3B30"
+                                    Margin="0,0,8,0" Click="CloseButton_Click" ToolTip="بستن"/>
+                            <Button Style="{StaticResource TrafficLightButton}" Background="#FFCC00"
+                                    Margin="0,0,8,0" Click="MinimizeButton_Click" ToolTip="کوچک کردن"/>
+                            <Button Style="{StaticResource TrafficLightButton}" Background="#28C840"
+                                    Click="MaximizeButton_Click" ToolTip="بزرگ کردن"/>
+                        </StackPanel>
+                    </StackPanel>
+                </Grid>
+            </Border>
+
+            <!-- ===== PAGE CONTENT ===== -->
+            <ContentControl Grid.Row="1" Content="{Binding CurrentViewModel}"
+                            HorizontalContentAlignment="Stretch" VerticalContentAlignment="Stretch"/>
+        </Grid>
+
+        <!-- ================= PIN MODAL ================= -->
+        <Grid Grid.ColumnSpan="2" Background="#59000000" Panel.ZIndex="100"
+              Visibility="{Binding IsPinModalVisible, Converter={StaticResource BoolToVis}}">
+            <Border Width="360" Background="White" CornerRadius="16" Padding="24"
+                    HorizontalAlignment="Center" VerticalAlignment="Center">
+                <Border.Effect>
+                    <DropShadowEffect BlurRadius="40" ShadowDepth="0" Opacity="0.35" Color="#000000"/>
+                </Border.Effect>
+                <StackPanel>
+                    <!-- Close -->
+                    <Button HorizontalAlignment="Left" Background="Transparent" BorderThickness="0"
+                            Cursor="Hand" Padding="4" Command="{Binding ClosePinModalCommand}"
+                            shell:WindowChrome.IsHitTestVisibleInChrome="True">
+                        <TextBlock Style="{StaticResource Icon}" FontSize="20" Foreground="#414755"
+                                   Text="&#xE5CD;"/>
+                    </Button>
+
+                    <!-- Lock icon -->
+                    <Border Width="48" Height="48" CornerRadius="24" Background="#1A0058BC"
+                            HorizontalAlignment="Center" Margin="0,4,0,12">
+                        <TextBlock Style="{StaticResource Icon}" FontSize="24" Foreground="#0058BC"
+                                   Text="{StaticResource IconLock}"/>
+                    </Border>
+
+                    <TextBlock Text="ورود پین کد" FontSize="16" FontWeight="SemiBold"
+                               Foreground="#181C23" HorizontalAlignment="Center"/>
+                    <TextBlock Text="برای مشاهده اطلاعات مالی رمز عبور خود را وارد کنید."
+                               FontSize="12" Foreground="#414755" HorizontalAlignment="Center"
+                               TextAlignment="Center" TextWrapping="Wrap" Margin="0,8,0,0"/>
+
+                    <!-- PIN boxes -->
+                    <StackPanel Orientation="Horizontal" HorizontalAlignment="Center"
+                                FlowDirection="LeftToRight" Margin="0,20,0,20">
+                        <Border Width="52" Height="60" CornerRadius="8" BorderBrush="#C1C6D7" BorderThickness="1" Margin="0,0,8,0">
+                            <PasswordBox MaxLength="1" BorderThickness="0" Background="Transparent"
+                                         FontSize="20" FontWeight="SemiBold" Foreground="#181C23"
+                                         HorizontalContentAlignment="Center" VerticalContentAlignment="Center"/>
+                        </Border>
+                        <Border Width="52" Height="60" CornerRadius="8" BorderBrush="#C1C6D7" BorderThickness="1" Margin="0,0,8,0">
+                            <PasswordBox MaxLength="1" BorderThickness="0" Background="Transparent"
+                                         FontSize="20" FontWeight="SemiBold" Foreground="#181C23"
+                                         HorizontalContentAlignment="Center" VerticalContentAlignment="Center"/>
+                        </Border>
+                        <Border Width="52" Height="60" CornerRadius="8" BorderBrush="#C1C6D7" BorderThickness="1" Margin="0,0,8,0">
+                            <PasswordBox MaxLength="1" BorderThickness="0" Background="Transparent"
+                                         FontSize="20" FontWeight="SemiBold" Foreground="#181C23"
+                                         HorizontalContentAlignment="Center" VerticalContentAlignment="Center"/>
+                        </Border>
+                        <Border Width="52" Height="60" CornerRadius="8" BorderBrush="#C1C6D7" BorderThickness="1">
+                            <PasswordBox MaxLength="1" BorderThickness="0" Background="Transparent"
+                                         FontSize="20" FontWeight="SemiBold" Foreground="#181C23"
+                                         HorizontalContentAlignment="Center" VerticalContentAlignment="Center"/>
+                        </Border>
+                    </StackPanel>
+
+                    <Button Content="تایید" Style="{StaticResource PrimaryButton}" FontSize="14"
+                            Padding="0,12" Command="{Binding ConfirmPinCommand}"
+                            shell:WindowChrome.IsHitTestVisibleInChrome="True"/>
+                </StackPanel>
+            </Border>
+        </Grid>
+    </Grid>
+</Window>

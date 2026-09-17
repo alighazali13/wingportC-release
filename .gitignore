@@ -1,0 +1,29 @@
+# Build
+bin/
+obj/
+.vs/
+*.user
+*.suo
+*.DotSettings.user
+*.log
+
+# IDE
+.idea/
+.vs/
+
+# NuGet
+packages/
+
+# Local
+appsettings.*.local.json
+first-run-admin.txt
+startup-error.txt
+startup-trace.txt
+
+# Runtime
+Logs/
+Backups/
+Data/
+
+# WPF temp
+*_wpftmp.csproj

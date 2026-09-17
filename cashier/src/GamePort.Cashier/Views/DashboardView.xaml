@@ -1,0 +1,419 @@
+<UserControl x:Class="GamePort.Cashier.Views.DashboardView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             mc:Ignorable="d"
+             d:DesignHeight="700" d:DesignWidth="1100"
+             FlowDirection="RightToLeft"
+             FontFamily="{StaticResource Vazirmatn}">
+
+    <UserControl.Resources>
+        <!-- Device card template (colors driven by Status) -->
+        <DataTemplate x:Key="DeviceCardTemplate">
+            <Border Width="200" Height="128" Margin="0,0,14,14" CornerRadius="14" Padding="14" Cursor="Hand">
+                <Border.Style>
+                    <Style TargetType="Border">
+                        <Setter Property="BorderThickness" Value="1"/>
+                        <Setter Property="BorderBrush" Value="#3334C759"/>
+                        <Setter Property="Background">
+                            <Setter.Value>
+                                <LinearGradientBrush StartPoint="0,0" EndPoint="1,1">
+                                    <GradientStop Color="#0D34C759" Offset="0"/>
+                                    <GradientStop Color="#1A34C759" Offset="1"/>
+                                </LinearGradientBrush>
+                            </Setter.Value>
+                        </Setter>
+                        <Style.Triggers>
+                            <DataTrigger Binding="{Binding Status}" Value="InUse">
+                                <Setter Property="BorderBrush" Value="#330070EB"/>
+                                <Setter Property="Background">
+                                    <Setter.Value>
+                                        <LinearGradientBrush StartPoint="0,0" EndPoint="1,1">
+                                            <GradientStop Color="#0D0070EB" Offset="0"/>
+                                            <GradientStop Color="#1A0070EB" Offset="1"/>
+                                        </LinearGradientBrush>
+                                    </Setter.Value>
+                                </Setter>
+                            </DataTrigger>
+                            <DataTrigger Binding="{Binding Status}" Value="Maintenance">
+                                <Setter Property="BorderBrush" Value="#33FF9500"/>
+                                <Setter Property="Background">
+                                    <Setter.Value>
+                                        <LinearGradientBrush StartPoint="0,0" EndPoint="1,1">
+                                            <GradientStop Color="#0DFF9500" Offset="0"/>
+                                            <GradientStop Color="#1AFF9500" Offset="1"/>
+                                        </LinearGradientBrush>
+                                    </Setter.Value>
+                                </Setter>
+                            </DataTrigger>
+                            <DataTrigger Binding="{Binding Status}" Value="Offline">
+                                <Setter Property="BorderBrush" Value="#33FF3B30"/>
+                                <Setter Property="Background">
+                                    <Setter.Value>
+                                        <LinearGradientBrush StartPoint="0,0" EndPoint="1,1">
+                                            <GradientStop Color="#0DFF3B30" Offset="0"/>
+                                            <GradientStop Color="#1AFF3B30" Offset="1"/>
+                                        </LinearGradientBrush>
+                                    </Setter.Value>
+                                </Setter>
+                            </DataTrigger>
+                        </Style.Triggers>
+                    </Style>
+                </Border.Style>
+                <Grid>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="*"/>
+                    </Grid.RowDefinitions>
+
+                    <!-- Offline alert dot -->
+                    <Ellipse Width="12" Height="12" Fill="#FF3B30" HorizontalAlignment="Right"
+                             VerticalAlignment="Top" Margin="0,-4,-4,0">
+                        <Ellipse.Style>
+                            <Style TargetType="Ellipse">
+                                <Setter Property="Visibility" Value="Collapsed"/>
+                                <Style.Triggers>
+                                    <DataTrigger Binding="{Binding Status}" Value="Offline">
+                                        <Setter Property="Visibility" Value="Visible"/>
+                                    </DataTrigger>
+                                </Style.Triggers>
+                            </Style>
+                        </Ellipse.Style>
+                    </Ellipse>
+
+                    <DockPanel Grid.Row="0">
+                        <Border DockPanel.Dock="Left" Background="#80FFFFFF" CornerRadius="99" Padding="8,3">
+                            <TextBlock Text="{Binding Name}" FontSize="13" FontWeight="SemiBold">
+                                <TextBlock.Style>
+                                    <Style TargetType="TextBlock">
+                                        <Setter Property="Foreground" Value="#34C759"/>
+                                        <Style.Triggers>
+                                            <DataTrigger Binding="{Binding Status}" Value="InUse">
+                                                <Setter Property="Foreground" Value="#0070EB"/>
+                                            </DataTrigger>
+                                            <DataTrigger Binding="{Binding Status}" Value="Maintenance">
+                                                <Setter Property="Foreground" Value="#FF9500"/>
+                                            </DataTrigger>
+                                            <DataTrigger Binding="{Binding Status}" Value="Offline">
+                                                <Setter Property="Foreground" Value="#FF3B30"/>
+                                            </DataTrigger>
+                                        </Style.Triggers>
+                                    </Style>
+                                </TextBlock.Style>
+                            </TextBlock>
+                        </Border>
+                        <TextBlock DockPanel.Dock="Right" FontSize="22"
+                                   HorizontalAlignment="Left" Text="{Binding Icon}">
+                            <TextBlock.Style>
+                                <Style TargetType="TextBlock" BasedOn="{StaticResource Icon}">
+                                    <Setter Property="Foreground" Value="#34C759"/>
+                                    <Style.Triggers>
+                                        <DataTrigger Binding="{Binding Status}" Value="InUse">
+                                            <Setter Property="Foreground" Value="#0070EB"/>
+                                        </DataTrigger>
+                                        <DataTrigger Binding="{Binding Status}" Value="Maintenance">
+                                            <Setter Property="Foreground" Value="#FF9500"/>
+                                        </DataTrigger>
+                                        <DataTrigger Binding="{Binding Status}" Value="Offline">
+                                            <Setter Property="Foreground" Value="#FF3B30"/>
+                                        </DataTrigger>
+                                    </Style.Triggers>
+                                </Style>
+                            </TextBlock.Style>
+                        </TextBlock>
+                    </DockPanel>
+
+                    <StackPanel Grid.Row="1" VerticalAlignment="Bottom">
+                        <TextBlock Text="{Binding StatusText}" FontSize="14" FontWeight="Medium">
+                            <TextBlock.Style>
+                                <Style TargetType="TextBlock">
+                                    <Setter Property="Foreground" Value="#181C23"/>
+                                    <Style.Triggers>
+                                        <DataTrigger Binding="{Binding Status}" Value="Offline">
+                                            <Setter Property="Foreground" Value="#FF3B30"/>
+                                            <Setter Property="FontWeight" Value="SemiBold"/>
+                                        </DataTrigger>
+                                    </Style.Triggers>
+                                </Style>
+                            </TextBlock.Style>
+                        </TextBlock>
+                        <TextBlock Text="{Binding User}" FontSize="12" Foreground="#414755" Margin="0,2,0,0"/>
+                    </StackPanel>
+                </Grid>
+            </Border>
+        </DataTemplate>
+    </UserControl.Resources>
+
+    <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled" Padding="24">
+        <StackPanel>
+
+            <!-- ===== STATS CARDS ===== -->
+            <ItemsControl ItemsSource="{Binding StatsCards}" Margin="0,0,0,24">
+                <ItemsControl.ItemsPanel>
+                    <ItemsPanelTemplate>
+                        <UniformGrid Rows="1" Columns="6"/>
+                    </ItemsPanelTemplate>
+                </ItemsControl.ItemsPanel>
+                <ItemsControl.ItemTemplate>
+                    <DataTemplate>
+                        <Border Background="White" BorderBrush="#4DC1C6D7" BorderThickness="1"
+                                CornerRadius="12" Margin="4,0">
+                            <Grid>
+                                <StackPanel Margin="16">
+                                    <TextBlock Text="{Binding Label}" FontSize="12" FontWeight="Medium" Foreground="#414755"/>
+                                    <TextBlock Text="{Binding Value}" FontSize="20" FontWeight="SemiBold"
+                                               Foreground="{Binding ValueColor}" Margin="0,8,0,0"/>
+                                </StackPanel>
+                                <Border Height="3" VerticalAlignment="Bottom" CornerRadius="0,0,12,12"
+                                        Background="{Binding AccentColor}"/>
+                            </Grid>
+                        </Border>
+                    </DataTemplate>
+                </ItemsControl.ItemTemplate>
+            </ItemsControl>
+
+            <!-- ===== BENTO GRID ===== -->
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="8*"/>
+                    <ColumnDefinition Width="4*"/>
+                </Grid.ColumnDefinitions>
+
+                <!-- ===== DEVICES ===== -->
+                <StackPanel Grid.Column="0" Margin="0,0,12,0">
+                    <DockPanel Margin="0,0,0,16" LastChildFill="False">
+                        <TextBlock DockPanel.Dock="Left" Text="وضعیت لحظه‌ای سیستم‌ها"
+                                   FontSize="16" FontWeight="SemiBold" Foreground="#181C23"/>
+                        <TextBlock DockPanel.Dock="Right" Text="مشاهده همه" FontSize="12"
+                                   Foreground="#0058BC" Cursor="Hand"/>
+                    </DockPanel>
+
+                    <!-- ===== PCs ===== -->
+                    <StackPanel Orientation="Horizontal" Margin="0,0,0,12">
+                        <TextBlock Style="{StaticResource Icon}" FontSize="16" Foreground="#0058BC"
+                                   Text="{StaticResource IconComputer}"/>
+                        <TextBlock Text="کامپیوترها" FontSize="14" FontWeight="SemiBold" Foreground="#181C23"
+                                   Margin="8,0,0,0" VerticalAlignment="Center"/>
+                        <Border Background="#E6E8F3" CornerRadius="99" Padding="8,1" Margin="8,0,0,0" VerticalAlignment="Center">
+                            <TextBlock Text="{Binding PcDevices.Count}" FontSize="13" FontWeight="SemiBold" Foreground="#414755"/>
+                        </Border>
+                    </StackPanel>
+
+                    <ItemsControl ItemsSource="{Binding PcDevices}" ItemTemplate="{StaticResource DeviceCardTemplate}">
+                        <ItemsControl.ItemsPanel>
+                            <ItemsPanelTemplate>
+                                <WrapPanel/>
+                            </ItemsPanelTemplate>
+                        </ItemsControl.ItemsPanel>
+                    </ItemsControl>
+
+                    <!-- ===== Consoles ===== -->
+                    <StackPanel Orientation="Horizontal" Margin="0,16,0,12">
+                        <TextBlock Style="{StaticResource Icon}" FontSize="16" Foreground="#4C4ACA"
+                                   Text="{StaticResource IconGamepad}"/>
+                        <TextBlock Text="کنسول‌ها" FontSize="14" FontWeight="SemiBold" Foreground="#181C23"
+                                   Margin="8,0,0,0" VerticalAlignment="Center"/>
+                        <Border Background="#E6E8F3" CornerRadius="99" Padding="8,1" Margin="8,0,0,0" VerticalAlignment="Center">
+                            <TextBlock Text="{Binding PsDevices.Count}" FontSize="13" FontWeight="SemiBold" Foreground="#414755"/>
+                        </Border>
+                    </StackPanel>
+
+                    <ItemsControl ItemsSource="{Binding PsDevices}" ItemTemplate="{StaticResource DeviceCardTemplate}">
+                        <ItemsControl.ItemsPanel>
+                            <ItemsPanelTemplate>
+                                <WrapPanel/>
+                            </ItemsPanelTemplate>
+                        </ItemsControl.ItemsPanel>
+                    </ItemsControl>
+                </StackPanel>
+
+                <!-- ===== RIGHT PANEL ===== -->
+                <StackPanel Grid.Column="1" Margin="12,0,0,0">
+
+                    <!-- Quick Actions -->
+                    <Grid Margin="0,0,0,24">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="*"/>
+                        </Grid.ColumnDefinitions>
+
+                        <Border Grid.Column="0" Background="White" BorderBrush="#4DC1C6D7" BorderThickness="1"
+                                CornerRadius="16" Margin="0,0,6,0" Cursor="Hand">
+                            <StackPanel Margin="0,18">
+                                <Border Width="48" Height="48" CornerRadius="12" Background="#1A0058BC"
+                                        HorizontalAlignment="Center" Margin="0,0,0,12">
+                                    <TextBlock Style="{StaticResource Icon}" FontSize="24" Foreground="#0058BC"
+                                               Text="{StaticResource IconWallet}"/>
+                                </Border>
+                                <TextBlock Text="شارژ کیف پول" FontSize="12" FontWeight="SemiBold"
+                                           HorizontalAlignment="Center" Foreground="#181C23"/>
+                            </StackPanel>
+                        </Border>
+
+                        <Border Grid.Column="1" Background="White" BorderBrush="#4DC1C6D7" BorderThickness="1"
+                                CornerRadius="16" Margin="3,0" Cursor="Hand">
+                            <StackPanel Margin="0,18">
+                                <Border Width="48" Height="48" CornerRadius="12" Background="#1A4C4ACA"
+                                        HorizontalAlignment="Center" Margin="0,0,0,12">
+                                    <TextBlock Style="{StaticResource Icon}" FontSize="24" Foreground="#4C4ACA"
+                                               Text="{StaticResource IconEvent}"/>
+                                </Border>
+                                <TextBlock Text="رزرو جدید" FontSize="12" FontWeight="SemiBold"
+                                           HorizontalAlignment="Center" Foreground="#181C23"/>
+                            </StackPanel>
+                        </Border>
+
+                        <Border Grid.Column="2" Background="White" BorderBrush="#4DC1C6D7" BorderThickness="1"
+                                CornerRadius="16" Margin="6,0,0,0" Cursor="Hand">
+                            <StackPanel Margin="0,18">
+                                <Border Width="48" Height="48" CornerRadius="12" Background="#1A34C759"
+                                        HorizontalAlignment="Center" Margin="0,0,0,12">
+                                    <TextBlock Style="{StaticResource Icon}" FontSize="24" Foreground="#34C759"
+                                               Text="{StaticResource IconPersonAdd}"/>
+                                </Border>
+                                <TextBlock Text="ثبت مشتری" FontSize="12" FontWeight="SemiBold"
+                                           HorizontalAlignment="Center" Foreground="#181C23"/>
+                            </StackPanel>
+                        </Border>
+                    </Grid>
+
+                    <!-- Financial Report (Protected) -->
+                    <Border Background="White" BorderBrush="#4DC1C6D7" BorderThickness="1" CornerRadius="16"
+                            Padding="20" Margin="0,0,0,24" MinHeight="220">
+                        <Grid>
+                            <StackPanel>
+                                <TextBlock Text="گزارش مالی امروز" FontSize="16" FontWeight="SemiBold" Foreground="#181C23"/>
+
+                                <StackPanel Margin="0,20,0,0" Opacity="0.45">
+                                    <StackPanel.Effect>
+                                        <BlurEffect Radius="16"/>
+                                    </StackPanel.Effect>
+                                    <DockPanel>
+                                        <StackPanel DockPanel.Dock="Left">
+                                            <TextBlock Text="درآمد کل" FontSize="12" Foreground="#414755"/>
+                                            <TextBlock Text="۱۲,۴۵۰,۰۰۰ ﷼" FontSize="20" FontWeight="SemiBold"
+                                                       Foreground="#181C23" Margin="0,4,0,0"/>
+                                        </StackPanel>
+                                        <StackPanel Orientation="Horizontal" HorizontalAlignment="Left" VerticalAlignment="Bottom">
+                                            <TextBlock Style="{StaticResource Icon}" FontSize="14" Foreground="#34C759"
+                                                       Text="{StaticResource IconTrendingUp}" Margin="0,0,4,0"/>
+                                            <TextBlock Text="+%۱۵" FontSize="12" Foreground="#34C759" VerticalAlignment="Center"/>
+                                        </StackPanel>
+                                    </DockPanel>
+
+                                    <Grid Height="64" Margin="0,20,0,0">
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="*"/>
+                                            <ColumnDefinition Width="*"/>
+                                            <ColumnDefinition Width="*"/>
+                                            <ColumnDefinition Width="*"/>
+                                            <ColumnDefinition Width="*"/>
+                                        </Grid.ColumnDefinitions>
+                                        <Border Grid.Column="0" Background="#330058BC" CornerRadius="4,4,0,0" VerticalAlignment="Bottom" Height="21"/>
+                                        <Border Grid.Column="1" Background="#660058BC" CornerRadius="4,4,0,0" VerticalAlignment="Bottom" Height="42"/>
+                                        <Border Grid.Column="2" Background="#990058BC" CornerRadius="4,4,0,0" VerticalAlignment="Bottom" Height="32"/>
+                                        <Border Grid.Column="3" Background="#0058BC" CornerRadius="4,4,0,0" VerticalAlignment="Bottom" Height="64"/>
+                                        <Border Grid.Column="4" Background="#CC0058BC" CornerRadius="4,4,0,0" VerticalAlignment="Bottom" Height="51"/>
+                                    </Grid>
+                                </StackPanel>
+                            </StackPanel>
+
+                            <Button Background="#66FFFFFF" Cursor="Hand"
+                                    Command="{Binding OpenPinModalCommand}" Focusable="False">
+                                <Button.Template>
+                                    <ControlTemplate TargetType="Button">
+                                        <Border Background="{TemplateBinding Background}" CornerRadius="16">
+                                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                        </Border>
+                                    </ControlTemplate>
+                                </Button.Template>
+                                <StackPanel VerticalAlignment="Center" HorizontalAlignment="Center" Margin="0,40,0,0">
+                                    <Border Width="48" Height="48" CornerRadius="24" Background="#CCFFFFFF"
+                                            HorizontalAlignment="Center" Margin="0,0,0,12">
+                                        <TextBlock Style="{StaticResource Icon}" FontSize="22" Foreground="#0058BC"
+                                                   Text="{StaticResource IconLock}"/>
+                                    </Border>
+                                    <TextBlock Text="اطلاعات مالی محافظت شده است" FontSize="12" FontWeight="Medium"
+                                               HorizontalAlignment="Center" Foreground="#181C23"/>
+                                    <TextBlock Text="برای مشاهده کلیک کنید" FontSize="11"
+                                               HorizontalAlignment="Center" Foreground="#414755" Margin="0,4,0,0"/>
+                                </StackPanel>
+                            </Button>
+                        </Grid>
+                    </Border>
+
+                    <!-- Recent Activity -->
+                    <Border Background="White" BorderBrush="#4DC1C6D7" BorderThickness="1" CornerRadius="16" Padding="20">
+                        <StackPanel>
+                            <TextBlock Text="فعالیت‌های اخیر" FontSize="16" FontWeight="SemiBold" Foreground="#181C23" Margin="0,0,0,20"/>
+
+                            <Grid>
+                                <Grid.RowDefinitions>
+                                    <RowDefinition Height="Auto"/>
+                                    <RowDefinition Height="Auto"/>
+                                    <RowDefinition Height="Auto"/>
+                                </Grid.RowDefinitions>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="Auto"/>
+                                    <ColumnDefinition Width="*"/>
+                                </Grid.ColumnDefinitions>
+
+                                <!-- timeline connector -->
+                                <Rectangle Grid.Row="0" Grid.RowSpan="3" Grid.Column="0" Width="2" Fill="#E6E8F3"
+                                           HorizontalAlignment="Right" Margin="0,16,15,32" Panel.ZIndex="0"/>
+
+                                <!-- item 1 -->
+                                <Border Grid.Row="0" Grid.Column="0" Width="32" Height="32" CornerRadius="16"
+                                        Background="#330070EB" VerticalAlignment="Top" Margin="0,0,12,0" Panel.ZIndex="1">
+                                    <TextBlock Style="{StaticResource Icon}" FontSize="18" Foreground="#0070EB"
+                                               Text="{StaticResource IconPlay}"/>
+                                </Border>
+                                <StackPanel Grid.Row="0" Grid.Column="1" Margin="0,0,0,20">
+                                    <TextBlock Text="نشست PC-07 آغاز شد" FontSize="14" FontWeight="Bold" Foreground="#181C23"/>
+                                    <StackPanel Orientation="Horizontal" Margin="0,4,0,0">
+                                        <TextBlock Text="توسط Admin" FontSize="11" Foreground="#414755"/>
+                                        <Ellipse Width="4" Height="4" Fill="#C1C6D7" Margin="8,0" VerticalAlignment="Center"/>
+                                        <TextBlock Text="۵ دقیقه پیش" FontSize="11" Foreground="#414755"/>
+                                    </StackPanel>
+                                </StackPanel>
+
+                                <!-- item 2 -->
+                                <Border Grid.Row="1" Grid.Column="0" Width="32" Height="32" CornerRadius="16"
+                                        Background="#3334C759" VerticalAlignment="Top" Margin="0,0,12,0" Panel.ZIndex="1">
+                                    <TextBlock Style="{StaticResource Icon}" FontSize="18" Foreground="#34C759"
+                                               Text="{StaticResource IconCheck}"/>
+                                </Border>
+                                <StackPanel Grid.Row="1" Grid.Column="1" Margin="0,0,0,20">
+                                    <TextBlock Text="سیستم PS-02 آزاد شد" FontSize="14" FontWeight="Bold" Foreground="#181C23"/>
+                                    <StackPanel Orientation="Horizontal" Margin="0,4,0,0">
+                                        <TextBlock Text="پرداخت موفقیت‌آمیز" FontSize="11" Foreground="#414755"/>
+                                        <Ellipse Width="4" Height="4" Fill="#C1C6D7" Margin="8,0" VerticalAlignment="Center"/>
+                                        <TextBlock Text="۱۲ دقیقه پیش" FontSize="11" Foreground="#414755"/>
+                                    </StackPanel>
+                                </StackPanel>
+
+                                <!-- item 3 -->
+                                <Border Grid.Row="2" Grid.Column="0" Width="32" Height="32" CornerRadius="16"
+                                        Background="#33FF9500" VerticalAlignment="Top" Margin="0,0,12,0" Panel.ZIndex="1">
+                                    <TextBlock Style="{StaticResource Icon}" FontSize="18" Foreground="#FF9500"
+                                               Text="{StaticResource IconWarning}"/>
+                                </Border>
+                                <StackPanel Grid.Row="2" Grid.Column="1">
+                                    <TextBlock Text="خطای اتصال در PC-11" FontSize="14" FontWeight="Bold" Foreground="#181C23"/>
+                                    <StackPanel Orientation="Horizontal" Margin="0,4,0,0">
+                                        <TextBlock Text="بررسی خودکار سیستم" FontSize="11" Foreground="#414755"/>
+                                        <Ellipse Width="4" Height="4" Fill="#C1C6D7" Margin="8,0" VerticalAlignment="Center"/>
+                                        <TextBlock Text="۴۵ دقیقه پیش" FontSize="11" Foreground="#414755"/>
+                                    </StackPanel>
+                                </StackPanel>
+                            </Grid>
+                        </StackPanel>
+                    </Border>
+
+                </StackPanel>
+            </Grid>
+        </StackPanel>
+    </ScrollViewer>
+</UserControl>
