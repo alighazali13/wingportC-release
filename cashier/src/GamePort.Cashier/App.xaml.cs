@@ -156,34 +156,64 @@ public partial class App : System.Windows.Application
             return;
         }
 
-        var loginWindow = _host.Services.GetRequiredService<LoginWindow>();
-        if (loginWindow.ShowDialog() != true)
+        try
         {
-            Shutdown();
-            return;
-        }
+            var loginWindow = _host.Services.GetRequiredService<LoginWindow>();
+            var loginResult = loginWindow.ShowDialog();
 
-        var mainWindow = _host.Services.GetRequiredService<MainWindow>();
-        var mainViewModel = _host.Services.GetRequiredService<MainWindowViewModel>();
-        mainWindow.DataContext = mainViewModel;
-
-        mainViewModel.LogoutRequested += () =>
-        {
-            mainWindow.Hide();
-
-            var login = _host.Services.GetRequiredService<LoginWindow>();
-            if (login.ShowDialog() == true)
+            if (loginResult != true)
             {
-                mainWindow.Show();
-            }
-            else
-            {
-                mainWindow.Close();
                 Shutdown();
+                return;
             }
-        };
 
-        mainWindow.Show();
+            var mainViewModel = _host.Services.GetRequiredService<MainWindowViewModel>();
+            var mainWindow = _host.Services.GetRequiredService<MainWindow>();
+            mainWindow.DataContext = mainViewModel;
+
+            mainViewModel.LogoutRequested += () =>
+            {
+                Dispatcher.Invoke(() =>
+                {
+                    mainWindow.Hide();
+
+                    try
+                    {
+                        var login = _host.Services.GetRequiredService<LoginWindow>();
+                        if (login.ShowDialog() == true)
+                        {
+                            mainWindow.Show();
+                        }
+                        else
+                        {
+                            mainWindow.Close();
+                            Shutdown();
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        File.WriteAllText(Path.Combine(
+                            LocalPaths.DefaultDataDirectory,
+                            "startup-error.txt"), ex.ToString());
+                        mainWindow.Close();
+                        Shutdown();
+                    }
+                });
+            };
+
+            mainWindow.Show();
+            mainWindow.Focus();
+        }
+        catch (Exception ex)
+        {
+            WriteStartupError(LocalPaths.DefaultDataDirectory, ex);
+            MessageBox.Show(
+                $"Startup Error: {ex.Message}",
+                "GamePort Cashier",
+                MessageBoxButton.OK,
+                MessageBoxImage.Error);
+            Shutdown(-1);
+        }
     }
 
     private async Task ApplyMigrationsAsync(IConfiguration configuration)
