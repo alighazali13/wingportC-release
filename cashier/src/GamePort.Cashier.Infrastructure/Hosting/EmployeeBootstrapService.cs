@@ -34,36 +34,38 @@ public class EmployeeBootstrapService : BackgroundService
         {
             using var scope = _scopeFactory.CreateScope();
             var employees = scope.ServiceProvider.GetRequiredService<IEmployeeRepository>();
+            var secretHasher = scope.ServiceProvider.GetRequiredService<ISecretHasher>();
+            var dataDir = LocalPaths.Resolve(_configuration);
 
             if (await employees.CountAsync() > 0)
             {
                 return;
             }
 
-            var secretHasher = scope.ServiceProvider.GetRequiredService<ISecretHasher>();
             var password = GeneratePassword();
+            var passwordHash = secretHasher.Hash(password);
 
             await employees.CreateAsync(new Employee
             {
                 Name = "Administrator",
                 Username = "admin",
-                PasswordHash = secretHasher.Hash(password),
+                PasswordHash = passwordHash,
                 Role = Roles.Admin,
                 IsActive = true
             });
 
-            var credentialsPath = Path.Combine(LocalPaths.Resolve(_configuration), "first-run-admin.txt");
+            var credentialsPath = Path.Combine(dataDir, "admin-credentials.dat");
+            await File.WriteAllTextAsync(credentialsPath, passwordHash, stoppingToken);
+
+            var firstRunPath = Path.Combine(dataDir, "first-run-admin.txt");
             await File.WriteAllTextAsync(
-                credentialsPath,
+                firstRunPath,
                 $"username: admin{Environment.NewLine}" +
                 $"password: {password}{Environment.NewLine}{Environment.NewLine}" +
-                "This file was generated on first run. Sign in, change the password, then delete this file." +
-                Environment.NewLine,
+                "This file was generated on first run. Sign in, change the password, then delete this file.",
                 stoppingToken);
 
-            _logger.LogWarning(
-                "No employees existed. A default administrator was created. Credentials were written to {Path}. Change the password and delete the file.",
-                credentialsPath);
+            _logger.LogWarning("Admin account created. Login: admin");
         }
         catch (Exception ex)
         {
