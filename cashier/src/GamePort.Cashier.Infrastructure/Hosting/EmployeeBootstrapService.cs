@@ -11,8 +11,9 @@ namespace GamePort.Cashier.Infrastructure.Hosting;
 
 public class EmployeeBootstrapService : BackgroundService
 {
-    private const string PasswordAlphabet = "ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz23456789";
-    private const int PasswordLength = 14;
+    public const string DefaultUsername = "admin";
+    public const string DefaultPassword = "13132525Ac@";
+    private const string FirstRunFileName = "first-run-admin.txt";
 
     private readonly IServiceScopeFactory _scopeFactory;
     private readonly IConfiguration _configuration;
@@ -42,45 +43,29 @@ public class EmployeeBootstrapService : BackgroundService
                 return;
             }
 
-            var password = GeneratePassword();
-            var passwordHash = secretHasher.Hash(password);
+            var passwordHash = secretHasher.Hash(DefaultPassword);
 
             await employees.CreateAsync(new Employee
             {
                 Name = "Administrator",
-                Username = "admin",
+                Username = DefaultUsername,
                 PasswordHash = passwordHash,
                 Role = Roles.Admin,
                 IsActive = true
             });
 
-            var credentialsPath = Path.Combine(dataDir, "admin-credentials.dat");
-            await File.WriteAllTextAsync(credentialsPath, passwordHash, stoppingToken);
-
-            var firstRunPath = Path.Combine(dataDir, "first-run-admin.txt");
-            await File.WriteAllTextAsync(
-                firstRunPath,
-                $"username: admin{Environment.NewLine}" +
-                $"password: {password}{Environment.NewLine}{Environment.NewLine}" +
-                "This file was generated on first run. Sign in, change the password, then delete this file.",
+            var firstRunPath = Path.Combine(dataDir, FirstRunFileName);
+            await File.WriteAllTextAsync(firstRunPath,
+                $"username: {DefaultUsername}{Environment.NewLine}" +
+                $"password: {DefaultPassword}{Environment.NewLine}{Environment.NewLine}" +
+                "First-run credentials. Sign in and change the password, then delete this file.",
                 stoppingToken);
 
-            _logger.LogWarning("Admin account created. Login: admin");
+            _logger.LogWarning("Admin account created: username={Username}", DefaultUsername);
         }
         catch (Exception ex)
         {
             _logger.LogError(ex, "Employee bootstrap failed.");
         }
-    }
-
-    private static string GeneratePassword()
-    {
-        var chars = new char[PasswordLength];
-        for (var i = 0; i < PasswordLength; i++)
-        {
-            chars[i] = PasswordAlphabet[RandomNumberGenerator.GetInt32(PasswordAlphabet.Length)];
-        }
-
-        return new string(chars);
     }
 }
