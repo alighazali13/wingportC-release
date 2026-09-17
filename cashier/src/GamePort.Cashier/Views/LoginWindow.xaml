@@ -7,13 +7,40 @@
         WindowStartupLocation="CenterScreen"
         WindowStyle="SingleBorderWindow"
         FlowDirection="RightToLeft"
-        FontFamily="{StaticResource Vazirmatn}"
+        FontFamily="Vazirmatn"
         Background="#F9F9FF"
         ResizeMode="NoResize">
 
-    <shell:WindowChrome.WindowChrome>
-        <shell:WindowChrome CaptionHeight="32" GlassFrameThickness="0" CornerRadius="0"/>
-    </shell:WindowChrome.WindowChrome>
+    <Window.Resources>
+        <Style x:Key="TrafficLightBtn" TargetType="Button">
+            <Setter Property="Width" Value="12"/>
+            <Setter Property="Height" Value="12"/>
+            <Setter Property="Cursor" Value="Hand"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Ellipse Fill="{TemplateBinding Background}"/>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+        <Style x:Key="PrimaryBtn" TargetType="Button">
+            <Setter Property="Background" Value="#0058BC"/>
+            <Setter Property="Foreground" Value="White"/>
+            <Setter Property="Cursor" Value="Hand"/>
+            <Setter Property="Padding" Value="16,12"/>
+            <Setter Property="FontSize" Value="14"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Border Background="{TemplateBinding Background}" CornerRadius="12" Padding="{TemplateBinding Padding}">
+                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                        </Border>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+    </Window.Resources>
 
     <Grid>
         <Grid.RowDefinitions>
@@ -23,20 +50,20 @@
 
         <Border Grid.Row="0" Background="#B3FFFFFF" MouseLeftButtonDown="Header_MouseDown"
                 shell:WindowChrome.IsHitTestVisibleInChrome="True">
-            <StackPanel Orientation="Horizontal" HorizontalAlignment="Left" VerticalAlignment="Center" Margin="8,0,0,0" FlowDirection="LeftToRight">
-                <Button Style="{StaticResource TrafficLightButton}" Background="#FF3B30"
-                        Click="Close_Click" ToolTip="بستن"/>
-                <Button Style="{StaticResource TrafficLightButton}" Background="#FFCC00" Margin="8,0,0,0"
-                        Click="Minimize_Click" ToolTip="کوچک کردن"/>
+            <StackPanel Orientation="Horizontal" HorizontalAlignment="Left" VerticalAlignment="Center"
+                        Margin="8,0,0,0" FlowDirection="LeftToRight">
+                <Button Style="{StaticResource TrafficLightBtn}" Background="#FF3B30"
+                        Click="Close_Click"/>
+                <Button Style="{StaticResource TrafficLightBtn}" Background="#FFCC00" Margin="8,0,0,0"
+                        Click="Minimize_Click"/>
             </StackPanel>
         </Border>
 
-        <StackPanel Grid.Row="1" Margin="36,16,36,36" VerticalAlignment="Top">
+        <StackPanel Grid.Row="1" Margin="36,20,36,36" VerticalAlignment="Top">
             <Border Width="64" Height="64" CornerRadius="18" Background="#0058BC"
-                    HorizontalAlignment="Center" Margin="0,4,0,16">
-                <TextBlock Style="{StaticResource Icon}" FontSize="32" Foreground="White"
-                           HorizontalAlignment="Center" VerticalAlignment="Center"
-                           Text="{StaticResource IconGamepad}"/>
+                    HorizontalAlignment="Center" Margin="0,0,0,16">
+                <TextBlock Text="&#xE30A;" FontSize="32" Foreground="White" FontFamily="Segoe MDL2 Assets"
+                           HorizontalAlignment="Center" VerticalAlignment="Center"/>
             </Border>
 
             <TextBlock Text="وینگ‌پورت" FontSize="22" FontWeight="Bold" Foreground="#181C23"
@@ -46,7 +73,7 @@
 
             <TextBlock Text="نام کاربری" FontSize="12" FontWeight="Medium" Foreground="#414755" Margin="4,0,0,6"/>
             <Border Background="White" CornerRadius="10" BorderBrush="#C1C6D7" BorderThickness="1" Padding="12,0">
-                <TextBox x:Name="UsernameBox" Text="{Binding Username, UpdateSourceTrigger=PropertyChanged}"
+                <TextBox x:Name="UsernameBox"
                          Background="Transparent" BorderThickness="0" FontSize="14" Foreground="#181C23"
                          Height="44" VerticalContentAlignment="Center" FlowDirection="LeftToRight"
                          KeyDown="Field_KeyDown"/>
@@ -65,9 +92,8 @@
                 <TextBlock x:Name="ErrorText" Text="" FontSize="12" Foreground="#BA1A1A" TextWrapping="Wrap"/>
             </Border>
 
-            <Button Content="ورود" Style="{StaticResource PrimaryButton}" FontSize="15"
-                    Padding="0,12" Margin="0,18,0,0"
-                    Click="Login_Click" x:Name="LoginButton"/>
+            <Button Content="ورود" Style="{StaticResource PrimaryBtn}" FontSize="15"
+                    Margin="0,18,0,0" Click="Login_Click" x:Name="LoginButton"/>
 
             <TextBlock Text="در حال ورود..." FontSize="12" Foreground="#414755"
                        HorizontalAlignment="Center" Margin="0,10,0,0" Visibility="Collapsed"
