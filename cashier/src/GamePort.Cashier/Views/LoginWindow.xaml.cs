@@ -21,8 +21,19 @@ public partial class LoginWindow : Window
 
     private void OnLoginSucceeded()
     {
-        DialogResult = true;
-        Close();
+        if (Dispatcher.CheckAccess())
+        {
+            DialogResult = true;
+            Close();
+        }
+        else
+        {
+            Dispatcher.Invoke(() =>
+            {
+                DialogResult = true;
+                Close();
+            });
+        }
     }
 
     private void PasswordBox_PasswordChanged(object sender, RoutedEventArgs e)
