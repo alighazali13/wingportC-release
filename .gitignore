@@ -23,7 +23,6 @@ startup-trace.txt
 # Runtime
 Logs/
 Backups/
-Data/
 
 # WPF temp
 *_wpftmp.csproj
