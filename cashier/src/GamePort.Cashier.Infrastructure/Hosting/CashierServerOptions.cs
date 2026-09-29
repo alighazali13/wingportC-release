@@ -4,7 +4,7 @@ public class CashierServerOptions
 {
     public const string SectionName = "Server";
 
-    public string[] Urls { get; set; } = { "http://0.0.0.0:5210" };
+    public string[] Urls { get; set; } = Array.Empty<string>();
 
     public string? ApiKey { get; set; }
 

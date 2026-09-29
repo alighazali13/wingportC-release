@@ -49,7 +49,7 @@ public partial class MainWindowViewModel : ObservableObject
     }
 
     [RelayCommand]
-    private void NavigateToDashboard()
+    public void NavigateToDashboard()
     {
         PageTitle = "داشبورد مدیریت";
         CurrentPage = "Dashboard";
@@ -57,7 +57,7 @@ public partial class MainWindowViewModel : ObservableObject
     }
 
     [RelayCommand]
-    private void NavigateToDevices()
+    public void NavigateToDevices()
     {
         PageTitle = "مدیریت سیستم‌ها";
         CurrentPage = "Devices";
@@ -65,7 +65,7 @@ public partial class MainWindowViewModel : ObservableObject
     }
 
     [RelayCommand]
-    private void NavigateToFinancialReports()
+    public void NavigateToFinancialReports()
     {
         PageTitle = "گزارشات مالی";
         CurrentPage = "Financial";
@@ -73,7 +73,7 @@ public partial class MainWindowViewModel : ObservableObject
     }
 
     [RelayCommand]
-    private void NavigateToUsers()
+    public void NavigateToUsers()
     {
         PageTitle = "مدیریت کاربران";
         CurrentPage = "Users";
@@ -81,7 +81,7 @@ public partial class MainWindowViewModel : ObservableObject
     }
 
     [RelayCommand]
-    private void NavigateToSettings()
+    public void NavigateToSettings()
     {
         PageTitle = "تنظیمات سیستم";
         CurrentPage = "Settings";
@@ -102,7 +102,7 @@ public partial class MainWindowViewModel : ObservableObject
     }
 
     [RelayCommand]
-    private void Logout()
+    public void Logout()
     {
         _session.SignOut();
         LogoutRequested?.Invoke();

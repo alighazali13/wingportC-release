@@ -25,6 +25,21 @@ public static class LocalPaths
         Directory.CreateDirectory(Path.Combine(directory, "Data"));
         Directory.CreateDirectory(Path.Combine(directory, "Backups"));
     }
+
+    public static void InitializeConfiguration(string dataDirectory)
+    {
+        var targetPath = Path.Combine(dataDirectory, "appsettings.json");
+        if (File.Exists(targetPath))
+        {
+            return;
+        }
+
+        var sourcePath = Path.Combine(AppContext.BaseDirectory, "appsettings.json");
+        if (File.Exists(sourcePath))
+        {
+            File.Copy(sourcePath, targetPath);
+        }
+    }
 }
 
 public static class PortResolver
@@ -113,6 +128,50 @@ public static class PortResolver
         catch
         {
             return $"http://0.0.0.0:{newPort}";
+        }
+    }
+}
+
+public static class LocalClientUrlResolver
+{
+    private const string FallbackUrl = "http://127.0.0.1:5210";
+    private static readonly string[] UnspecifiedHosts = { "0.0.0.0", "::", "[::]" };
+
+    public static Uri Resolve(string[] serverBindUrls)
+    {
+        if (serverBindUrls is not { Length: > 0 })
+        {
+            return new Uri(FallbackUrl);
+        }
+
+        foreach (var url in serverBindUrls)
+        {
+            if (TryExtractPort(url, out var port) && port > 0)
+            {
+                return new Uri($"http://127.0.0.1:{port}");
+            }
+        }
+
+        return new Uri(FallbackUrl);
+    }
+
+    private static bool TryExtractPort(string url, out int port)
+    {
+        port = 0;
+        if (string.IsNullOrWhiteSpace(url))
+        {
+            return false;
+        }
+
+        try
+        {
+            var uri = new Uri(url);
+            port = uri.Port;
+            return port > 0;
+        }
+        catch (UriFormatException)
+        {
+            return false;
         }
     }
 }

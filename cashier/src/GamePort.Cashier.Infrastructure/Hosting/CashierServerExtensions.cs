@@ -139,7 +139,12 @@ public static class CashierServerExtensions
 
     public static string[] GetServerUrls(this IConfiguration configuration)
     {
-        return configuration.GetSection(CashierServerOptions.SectionName).Get<CashierServerOptions>()?.Urls
-               ?? new[] { "http://0.0.0.0:5210" };
+        var configured = configuration.GetSection(CashierServerOptions.SectionName).Get<CashierServerOptions>()?.Urls;
+        if (configured is { Length: > 0 })
+        {
+            return configured.Distinct(StringComparer.OrdinalIgnoreCase).ToArray();
+        }
+
+        return new[] { "http://0.0.0.0:5210" };
     }
 }

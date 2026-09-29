@@ -1,7 +1,8 @@
 using System.Threading.Tasks;
 using System.Windows;
+using System.Windows.Controls;
 using System.Windows.Input;
-using System.Windows.Media;
+using GamePort.Cashier.Services;
 using GamePort.Cashier.ViewModels;
 
 namespace GamePort.Cashier.Views;
@@ -14,112 +15,65 @@ public partial class LoginWindow : Window
     {
         InitializeComponent();
         _viewModel = viewModel;
-        DataContext = viewModel;
-        Loaded += (_, _) => UsernameBox.Focus();
+        DataContext = _viewModel;
+        Title = "ورود به وینگ‌پورت";
+        WindowStartupLocation = WindowStartupLocation.CenterScreen;
     }
 
-    private async void Login_Click(object sender, RoutedEventArgs e)
+    private async void LoginButton_Click(object sender, RoutedEventArgs e)
     {
-        SetBusy(true);
-        SetError(null);
-
-        _viewModel.Username = UsernameBox.Text;
-        _viewModel.Password = PasswordBox.Password;
-
-        if (string.IsNullOrWhiteSpace(_viewModel.Username) || string.IsNullOrWhiteSpace(_viewModel.Password))
+        if (string.IsNullOrWhiteSpace(UsernameBox.Text) || string.IsNullOrWhiteSpace(PasswordBox.Password))
         {
-            SetError("نام کاربری و رمز عبور را وارد کنید.");
-            SetBusy(false);
+            ShowStatus("نام کاربری و رمز عبور را وارد کنید.", false);
             return;
         }
 
+        ShowStatus("در حال ورود...", true);
+
         try
         {
+            _viewModel.Username = UsernameBox.Text.Trim();
+            _viewModel.Password = PasswordBox.Password;
             _viewModel.ErrorMessage = null;
 
             await Task.Run(async () =>
             {
                 if (_viewModel.LoginCommand.CanExecute(null))
-                {
                     await _viewModel.LoginCommand.ExecuteAsync(null);
-                }
             });
+
+            if (!string.IsNullOrEmpty(_viewModel.ErrorMessage))
+            {
+                ShowStatus(_viewModel.ErrorMessage, false);
+                return;
+            }
 
             Dispatcher.Invoke(() =>
             {
-                if (_viewModel.ErrorMessage is not null)
-                {
-                    SetError(_viewModel.ErrorMessage);
-                    SetBusy(false);
-                    return;
-                }
-
                 DialogResult = true;
                 Close();
             });
         }
         catch (Exception ex)
         {
-            Dispatcher.Invoke(() =>
-            {
-                SetError($"خطا: {ex.Message}");
-                SetBusy(false);
-            });
+            Dispatcher.Invoke(() => ShowStatus("خطا: " + ex.Message, false));
         }
     }
 
-    private void Field_KeyDown(object sender, KeyEventArgs e)
+    private void ShowStatus(string text, bool isBusy)
     {
-        if (e.Key == Key.Enter && LoginButton.IsEnabled)
-        {
-            Login_Click(sender, e);
-            e.Handled = true;
-        }
+        StatusText.Text = text;
+        StatusBorder.Visibility = Visibility.Visible;
+        LoginButton.IsEnabled = !isBusy;
     }
 
-    private void Header_MouseDown(object sender, MouseButtonEventArgs e)
+    private void PasswordBox_PasswordChanged(object sender, System.Windows.RoutedEventArgs e)
     {
-        if (e.LeftButton == MouseButtonState.Pressed)
-        {
-            DragMove();
-        }
     }
 
-    private void Close_Click(object sender, RoutedEventArgs e)
+    private void PasswordBox_KeyDown(object sender, KeyEventArgs e)
     {
-        DialogResult = false;
-        Close();
-    }
-
-    private void Minimize_Click(object sender, RoutedEventArgs e)
-    {
-        WindowState = WindowState.Minimized;
-    }
-
-    private void PasswordBox_PasswordChanged(object sender, RoutedEventArgs e)
-    {
-        if (_viewModel is not null)
-        {
-            _viewModel.Password = PasswordBox.Password;
-        }
-    }
-
-    private void SetError(string? message)
-    {
-        if (string.IsNullOrWhiteSpace(message))
-        {
-            ErrorBorder.Visibility = Visibility.Collapsed;
-        }
-        else
-        {
-            ErrorBorder.Visibility = Visibility.Visible;
-            ErrorText.Text = message;
-        }
-    }
-
-    private void SetBusy(bool busy)
-    {
-        LoginButton.IsEnabled = !busy;
-        LoadingText.Visibility = busy ? Visibility.Visible : Visibility.Collapsed;
+        if (e.Key == Key.Enter)
+            LoginButton_Click(sender, e);
     }
 }
