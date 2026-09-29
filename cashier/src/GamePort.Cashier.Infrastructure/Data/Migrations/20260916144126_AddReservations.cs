@@ -15,14 +15,7 @@ namespace GamePort.Cashier.Infrastructure.Data.Migrations
                 name: "IX_Reservations_DeviceId",
                 table: "Reservations");
 
-            migrationBuilder.AlterColumn<int>(
-                name: "Status",
-                table: "Reservations",
-                type: "integer",
-                nullable: false,
-                oldClrType: typeof(string),
-                oldType: "character varying(50)",
-                oldMaxLength: 50);
+            migrationBuilder.Sql(@"ALTER TABLE ""Reservations"" ALTER COLUMN ""Status"" TYPE integer USING ""Status""::integer;");
 
             migrationBuilder.AlterColumn<string>(
                 name: "Source",
