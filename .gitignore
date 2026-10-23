@@ -27,3 +27,11 @@ Data/
 
 # WPF temp
 *_wpftmp.csproj
+
+# Nested git repos (pushed separately)
+customer/
+
+# Windows Zone.Identifier junk
+*Zone.Identifier
+
+opencode.json
