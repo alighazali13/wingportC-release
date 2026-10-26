@@ -31,7 +31,14 @@ public class SessionFlowTests
         var outbox = new OutboxRepository(context);
         var hasher = new Pbkdf2SecretHasher();
         var unitOfWork = new UnitOfWork(context);
-        var handler = new RegisterDeviceHandler(devices, auditLogs, outbox, hasher, unitOfWork);
+        var handler = new RegisterDeviceHandler(
+            devices,
+            new ZoneRepository(context),
+            new PricingGroupRepository(context),
+            auditLogs,
+            outbox,
+            hasher,
+            unitOfWork);
 
         var result = await handler.HandleAsync(
             new RegisterDeviceCommand("PC-01", DeviceType.GamingPC, "10.0.0.5", null, null));
@@ -77,7 +84,7 @@ public class SessionFlowTests
             IsActive = true
         });
 
-        var startHandler = new StartSessionHandler(customers, devices, sessions, pricing, new ReservationRepository(context), auditLogs, outbox, unitOfWork);
+        var startHandler = new StartSessionHandler(customers, devices, new ZoneRepository(context), sessions, pricing, new ReservationRepository(context), auditLogs, outbox, unitOfWork);
         var startResult = await startHandler.HandleAsync(
             new StartSessionCommand(customer.Id, device.Id, null, "Cashier"));
 
@@ -132,7 +139,7 @@ public class SessionFlowTests
             IsActive = true
         });
 
-        var handler = new StartSessionHandler(customers, devices, sessions, pricing, new ReservationRepository(context), auditLogs, outbox, unitOfWork);
+        var handler = new StartSessionHandler(customers, devices, new ZoneRepository(context), sessions, pricing, new ReservationRepository(context), auditLogs, outbox, unitOfWork);
         var result = await handler.HandleAsync(new StartSessionCommand(customer.Id, device.Id, null, "Cashier"));
 
         Assert.False(result.IsSuccess);
@@ -159,7 +166,7 @@ public class SessionFlowTests
             Status = DeviceStatus.Available
         });
 
-        var handler = new StartSessionHandler(customers, devices, sessions, pricing, new ReservationRepository(context), auditLogs, outbox, unitOfWork);
+        var handler = new StartSessionHandler(customers, devices, new ZoneRepository(context), sessions, pricing, new ReservationRepository(context), auditLogs, outbox, unitOfWork);
         var result = await handler.HandleAsync(new StartSessionCommand(customer.Id, device.Id, null, "Cashier"));
 
         Assert.False(result.IsSuccess);

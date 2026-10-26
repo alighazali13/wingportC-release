@@ -60,7 +60,7 @@ public class CancelSessionHandler
             var device = await _devices.GetByIdAsync(session.DeviceId);
             if (device is not null)
             {
-                device.Status = DeviceStatus.Available;
+                DeviceStateTransitions.MarkSessionEnd(device);
                 await _devices.UpdateAsync(device);
             }
 

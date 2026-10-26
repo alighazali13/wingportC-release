@@ -24,5 +24,9 @@ startup-trace.txt
 Logs/
 Backups/
 
+# Release artifacts
+release/
+publish/
+
 # WPF temp
 *_wpftmp.csproj

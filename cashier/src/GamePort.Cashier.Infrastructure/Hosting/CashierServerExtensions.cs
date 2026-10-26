@@ -103,7 +103,9 @@ public static class CashierServerExtensions
                 };
             })
             .AddScheme<ApiKeyAuthenticationOptions, ApiKeyAuthenticationHandler>(
-                ApiKeyAuthenticationDefaults.Scheme, _ => { });
+                ApiKeyAuthenticationDefaults.Scheme, _ => { })
+            .AddScheme<DeviceAuthenticationOptions, DeviceAuthenticationHandler>(
+                DeviceAuthenticationDefaults.Scheme, _ => { });
 
         services.AddAuthorization(options =>
         {

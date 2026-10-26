@@ -1,4 +1,5 @@
 using System.Collections.ObjectModel;
+using System.Windows.Threading;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using CommunityToolkit.Mvvm.Messaging;
@@ -10,23 +11,51 @@ namespace GamePort.Cashier.ViewModels;
 
 public partial class DashboardViewModel : ObservableObject
 {
-    private readonly IApiClient _apiClient;
+    private const int EndingSoonThresholdMinutes = 15;
 
-    public ObservableCollection<StatsCard> StatsCards { get; } = new();
+    private readonly IApiClient _apiClient;
+    private readonly INavigationService _navigation;
+    private DispatcherTimer? _tickTimer;
+    private List<DeviceCard> _allCards = new();
+
     public ObservableCollection<DeviceCard> PcDevices { get; } = new();
     public ObservableCollection<DeviceCard> PsDevices { get; } = new();
+    public ObservableCollection<DeviceCard> FilteredDevices { get; } = new();
     public ObservableCollection<RecentActivity> RecentActivities { get; } = new();
 
-    [ObservableProperty]
-    private bool _isLoading;
+    [ObservableProperty] private bool _isLoading;
+    [ObservableProperty] private string? _errorMessage;
+    [ObservableProperty] private bool _isPcSelected = true;
+    [ObservableProperty] private string _searchText = string.Empty;
+    [ObservableProperty] private string _activeFilter = "all";
 
-    [ObservableProperty]
-    private string? _errorMessage;
+    // Counters
+    [ObservableProperty] private int _totalCount;
+    [ObservableProperty] private int _activeCount;
+    [ObservableProperty] private int _readyCount;
+    [ObservableProperty] private int _endingSoonCount;
+    [ObservableProperty] private int _reservedCount;
+    [ObservableProperty] private int _offlineCount;
 
-    public DashboardViewModel(IApiClient apiClient)
+    // Action center
+    public ObservableCollection<ActionCenterItem> ActionCenterItems { get; } = new();
+
+    public int PcCount => PcDevices.Count;
+    public int PsCount => PsDevices.Count;
+
+    public event Action? OpenDeviceRequested;
+    public event Action? OpenReservationsRequested;
+    public event Action? OpenCustomersRequested;
+
+    public DashboardViewModel(IApiClient apiClient, INavigationService navigation)
     {
         _apiClient = apiClient;
+        _navigation = navigation;
         _ = LoadAsync();
+
+        _tickTimer = new DispatcherTimer { Interval = TimeSpan.FromSeconds(1) };
+        _tickTimer.Tick += (_, _) => RefreshTimers();
+        _tickTimer.Start();
     }
 
     [RelayCommand]
@@ -47,6 +76,7 @@ public partial class DashboardViewModel : ObservableObject
             var sessionsResult = await _apiClient.GetActiveSessionsAsync();
             var customersResult = await _apiClient.SearchCustomersAsync(null);
             var auditResult = await _apiClient.GetRecentAuditAsync(6);
+            var reservationsResult = await _apiClient.GetUpcomingReservationsAsync();
 
             var devices = devicesResult.Data ?? new List<DeviceResponse>();
             var sessions = sessionsResult.Data ?? new List<SessionResponse>();
@@ -59,29 +89,26 @@ public partial class DashboardViewModel : ObservableObject
                 .GroupBy(s => s.DeviceId)
                 .ToDictionary(g => g.Key, g => g.First());
 
+            _allCards = devices
+                .Select(d => CreateDeviceCard(d, sessionByDevice, customerNames))
+                .ToList();
+
             PcDevices.Clear();
             PsDevices.Clear();
-
-            foreach (var device in devices)
+            foreach (var card in _allCards)
             {
-                var card = CreateDeviceCard(device, sessionByDevice, customerNames);
-                if (device.Type.Equals("PlayStation", StringComparison.OrdinalIgnoreCase))
-                {
-                    PsDevices.Add(card);
-                }
-                else
-                {
-                    PcDevices.Add(card);
-                }
+                if (card.Type == "PS") PsDevices.Add(card);
+                else PcDevices.Add(card);
             }
 
-            BuildStats(devices);
+            BuildCounters();
+            BuildActionCenter(_allCards, reservationsResult.Data ?? new List<ReservationResponse>());
 
             RecentActivities.Clear();
             foreach (var item in auditResult.Data ?? new List<AuditLogItem>())
-            {
                 RecentActivities.Add(MapActivity(item));
-            }
+
+            ApplyFilterAndSearch();
         }
         catch (Exception ex)
         {
@@ -94,25 +121,151 @@ public partial class DashboardViewModel : ObservableObject
     }
 
     [RelayCommand]
-    private void OpenPinModal()
+    private void SelectPc()
     {
-        WeakReferenceMessenger.Default.Send(new OpenPinModalMessage());
+        IsPcSelected = true;
+        ApplyFilterAndSearch();
     }
 
-    private void BuildStats(List<DeviceResponse> devices)
+    [RelayCommand]
+    private void SelectPs5()
     {
-        StatsCards.Clear();
+        IsPcSelected = false;
+        ApplyFilterAndSearch();
+    }
 
-        var inUse = devices.Count(d => d.Status == "InUse");
-        var available = devices.Count(d => d.Status == "Available");
-        var maintenance = devices.Count(d => d.Status == "Maintenance");
+    [RelayCommand]
+    private void SetFilter(string filter)
+    {
+        ActiveFilter = filter;
+        ApplyFilterAndSearch();
+    }
 
-        StatsCards.Add(new StatsCard { Label = "کل دستگاه‌ها", Value = PersianFormat.Number(devices.Count), ValueColor = "#181C23", AccentColor = "Transparent" });
-        StatsCards.Add(new StatsCard { Label = "کامپیوتر (PC)", Value = PersianFormat.Number(PcDevices.Count), ValueColor = "#181C23", AccentColor = "#0058BC" });
-        StatsCards.Add(new StatsCard { Label = "کنسول (PS)", Value = PersianFormat.Number(PsDevices.Count), ValueColor = "#181C23", AccentColor = "#4C4ACA" });
-        StatsCards.Add(new StatsCard { Label = "در حال استفاده", Value = PersianFormat.Number(inUse), ValueColor = "#0070EB", AccentColor = "#0070EB" });
-        StatsCards.Add(new StatsCard { Label = "آماده", Value = PersianFormat.Number(available), ValueColor = "#34C759", AccentColor = "#34C759" });
-        StatsCards.Add(new StatsCard { Label = "تعمیرات", Value = PersianFormat.Number(maintenance), ValueColor = "#FF9500", AccentColor = "#FF9500" });
+    [RelayCommand]
+    private void ClearFilter()
+    {
+        ActiveFilter = "all";
+        SearchText = string.Empty;
+        ApplyFilterAndSearch();
+    }
+
+    [RelayCommand]
+    private void Refresh() => _ = LoadAsync();
+
+    [RelayCommand]
+    private void OpenPinModal() => WeakReferenceMessenger.Default.Send(new OpenPinModalMessage());
+
+    [RelayCommand]
+    private void GoToReservations() => OpenReservationsRequested?.Invoke();
+
+    [RelayCommand]
+    private void GoToNewCustomer() => OpenCustomersRequested?.Invoke();
+
+    [RelayCommand]
+    private void OpenDevice(DeviceCard? card) => OpenDeviceRequested?.Invoke();
+
+    partial void OnSearchTextChanged(string value) => ApplyFilterAndSearch();
+
+    private void ApplyFilterAndSearch()
+    {
+        var source = IsPcSelected ? PcDevices : PsDevices;
+
+        IEnumerable<DeviceCard> filtered = source;
+
+        if (!string.IsNullOrWhiteSpace(SearchText))
+        {
+            var s = SearchText.Trim();
+            filtered = filtered.Where(c =>
+                c.Name.Contains(s, StringComparison.OrdinalIgnoreCase) ||
+                c.User.Contains(s, StringComparison.OrdinalIgnoreCase) ||
+                c.Zone.Contains(s, StringComparison.OrdinalIgnoreCase));
+        }
+
+        if (ActiveFilter != "all")
+        {
+            filtered = ActiveFilter switch
+            {
+                "active" => filtered.Where(c => c.Status == DeviceState.InUse),
+                "ready" => filtered.Where(c => c.Status == DeviceState.Available),
+                "ending" => filtered.Where(c => c.IsEndingSoon),
+                "reserved" => filtered.Where(c => c.Status == DeviceState.Reserved),
+                "offline" => filtered.Where(c => c.Status == DeviceState.Offline || c.Status == DeviceState.Disconnected),
+                _ => filtered
+            };
+        }
+
+        FilteredDevices.Clear();
+        foreach (var card in filtered)
+            FilteredDevices.Add(card);
+    }
+
+    private void RefreshTimers()
+    {
+        foreach (var card in FilteredDevices)
+        {
+            if (card.Status == DeviceState.InUse && card.SessionStart.HasValue)
+            {
+                var elapsed = DateTime.UtcNow - card.SessionStart.Value;
+                if (elapsed < TimeSpan.Zero) elapsed = TimeSpan.Zero;
+                card.Time = PersianFormat.Digits($"{(int)elapsed.TotalHours:00}:{elapsed.Minutes:00}:{elapsed.Seconds:00}");
+
+                if (card.PlannedEnd.HasValue)
+                {
+                    var remaining = card.PlannedEnd.Value - DateTime.UtcNow;
+                    card.IsEndingSoon = remaining.TotalMinutes > 0 && remaining.TotalMinutes <= EndingSoonThresholdMinutes;
+                    card.RemainingText = card.IsEndingSoon
+                        ? PersianFormat.Digits($"{(int)remaining.TotalMinutes:00}:{remaining.Seconds:00}")
+                        : string.Empty;
+                }
+            }
+        }
+    }
+
+    private void BuildCounters()
+    {
+        TotalCount = _allCards.Count;
+        ActiveCount = _allCards.Count(c => c.Status == DeviceState.InUse);
+        ReadyCount = _allCards.Count(c => c.Status == DeviceState.Available);
+        OfflineCount = _allCards.Count(c => c.Status == DeviceState.Offline || c.Status == DeviceState.Disconnected);
+        EndingSoonCount = _allCards.Count(c => c.IsEndingSoon);
+        ReservedCount = _allCards.Count(c => c.Status == DeviceState.Reserved);
+
+        OnPropertyChanged(nameof(PcCount));
+        OnPropertyChanged(nameof(PsCount));
+    }
+
+    private void BuildActionCenter(List<DeviceCard> cards, List<ReservationResponse> reservations)
+    {
+        ActionCenterItems.Clear();
+
+        var offline = cards.Where(c => c.Status == DeviceState.Offline || c.Status == DeviceState.Disconnected).ToList();
+        if (offline.Count > 0)
+            ActionCenterItems.Add(new ActionCenterItem
+            {
+                Type = "offline",
+                Count = offline.Count,
+                Description = $"{offline.Count} آفلاین ({offline[0].Name})",
+                Color = "#EF4444"
+            });
+
+        var ending = cards.Where(c => c.IsEndingSoon).ToList();
+        if (ending.Count > 0)
+            ActionCenterItems.Add(new ActionCenterItem
+            {
+                Type = "ending",
+                Count = ending.Count,
+                Description = $"{ending.Count} نزدیک پایان ({ending[0].Name})",
+                Color = "#F59E0B"
+            });
+
+        if (reservations.Count > 0)
+            ActionCenterItems.Add(new ActionCenterItem
+            {
+                Type = "reserved",
+                Count = reservations.Count,
+                Description = $"{reservations.Count} رزرو نزدیک",
+                Color = "#F59E0B"
+            });
     }
 
     private static DeviceCard CreateDeviceCard(
@@ -126,21 +279,25 @@ public partial class DashboardViewModel : ObservableObject
             "InUse" => DeviceState.InUse,
             "Maintenance" => DeviceState.Maintenance,
             "Available" => DeviceState.Available,
+            "Reserved" => DeviceState.Reserved,
+            "Disconnected" => DeviceState.Disconnected,
             _ => DeviceState.Offline
         };
 
         var card = new DeviceCard
         {
             Name = device.Name,
+            Zone = device.IpAddress,
             Type = isConsole ? "PS" : "PC",
             Status = state,
             StatusText = device.Status switch
             {
-                "InUse" => "در حال استفاده",
+                "InUse" => "در حال بازی",
                 "Maintenance" => "تعمیرات",
                 "Available" => "آماده",
+                "Reserved" => "رزرو شده",
                 "Disconnected" => "قطع ارتباط",
-                "Offline" => "خاموش",
+                "Offline" => "آفلاین",
                 _ => "-"
             },
             User = "-",
@@ -150,37 +307,28 @@ public partial class DashboardViewModel : ObservableObject
         if (state == DeviceState.InUse && sessionByDevice.TryGetValue(device.Id, out var session))
         {
             card.User = customerNames.TryGetValue(session.CustomerId, out var name) ? name : "مشتری";
-            card.Time = FormatElapsed(session.StartTime);
-            card.Cost = PersianFormat.Number(CalculateCost(session)) + " تومان";
+            card.SessionStart = session.StartTime;
+            card.PlannedEnd = session.PlannedEndTime;
+
+            var elapsed = DateTime.UtcNow - session.StartTime;
+            if (elapsed < TimeSpan.Zero) elapsed = TimeSpan.Zero;
+            card.Time = PersianFormat.Digits($"{(int)elapsed.TotalHours:00}:{elapsed.Minutes:00}:{elapsed.Seconds:00}");
+
+            if (session.PlannedEndTime.HasValue)
+            {
+                var remaining = session.PlannedEndTime.Value - DateTime.UtcNow;
+                card.IsEndingSoon = remaining.TotalMinutes > 0 && remaining.TotalMinutes <= EndingSoonThresholdMinutes;
+                card.RemainingText = card.IsEndingSoon
+                    ? PersianFormat.Digits($"{(int)remaining.TotalMinutes:00}:{remaining.Seconds:00}")
+                    : string.Empty;
+            }
         }
         else if (state == DeviceState.Offline)
         {
-            card.User = device.IsConnected ? "قطع ارتباط" : "خاموش";
+            card.User = device.IsConnected ? "قطع ارتباط" : "آفلاین";
         }
 
         return card;
-    }
-
-    private static decimal CalculateCost(SessionResponse session)
-    {
-        var elapsedHours = (decimal)(DateTime.UtcNow - session.StartTime).TotalHours;
-        if (elapsedHours < 0)
-        {
-            elapsedHours = 0;
-        }
-
-        return Math.Round(session.PriceAtStart * elapsedHours, 0);
-    }
-
-    private static string FormatElapsed(DateTime startTime)
-    {
-        var elapsed = DateTime.UtcNow - startTime;
-        if (elapsed < TimeSpan.Zero)
-        {
-            elapsed = TimeSpan.Zero;
-        }
-
-        return PersianFormat.Digits($"{(int)elapsed.TotalHours:00}:{elapsed.Minutes:00}:{elapsed.Seconds:00}");
     }
 
     private static RecentActivity MapActivity(AuditLogItem item)
@@ -191,7 +339,7 @@ public partial class DashboardViewModel : ObservableObject
             "EndSession" => ("پایان نشست", "\uE73E", "Success"),
             "CancelSession" => ("لغو نشست", "\uE711", "Warning"),
             "ExpireSession" => ("انقضای نشست", "\uE823", "Warning"),
-            "InterruptSession" => ("قطع نشست (کمبود موجودی)", "\uE7BA", "Warning"),
+            "InterruptSession" => ("قطع نشست", "\uE7BA", "Warning"),
             "RegisterCustomer" => ("ثبت مشتری جدید", "\uE8D4", "Info"),
             "WalletRecharge" => ("شارژ کیف پول", "\uE8C7", "Success"),
             "RegisterDevice" => ("ثبت دستگاه", "\uE977", "Info"),
@@ -216,7 +364,26 @@ public enum DeviceState
     Available,
     InUse,
     Maintenance,
-    Offline
+    Reserved,
+    Offline,
+    Disconnected
+}
+
+public partial class DeviceCard : ObservableObject
+{
+    public string Name { get; set; } = string.Empty;
+    public string Zone { get; set; } = "-";
+    public string Type { get; set; } = string.Empty;
+    public DeviceState Status { get; set; }
+    public string StatusText { get; set; } = string.Empty;
+    public string User { get; set; } = string.Empty;
+    public string Icon { get; set; } = string.Empty;
+    public string Time { get; set; } = string.Empty;
+    public DateTime? SessionStart { get; set; }
+    public DateTime? PlannedEnd { get; set; }
+
+    [ObservableProperty] private bool _isEndingSoon;
+    [ObservableProperty] private string _remainingText = string.Empty;
 }
 
 public class StatsCard
@@ -227,16 +394,12 @@ public class StatsCard
     public string AccentColor { get; set; } = "Transparent";
 }
 
-public class DeviceCard
+public class ActionCenterItem
 {
-    public string Name { get; set; } = string.Empty;
     public string Type { get; set; } = string.Empty;
-    public DeviceState Status { get; set; }
-    public string StatusText { get; set; } = string.Empty;
-    public string User { get; set; } = string.Empty;
-    public string Icon { get; set; } = string.Empty;
-    public string Time { get; set; } = string.Empty;
-    public string Cost { get; set; } = string.Empty;
+    public int Count { get; set; }
+    public string Description { get; set; } = string.Empty;
+    public string Color { get; set; } = "#EF4444";
 }
 
 public class RecentActivity

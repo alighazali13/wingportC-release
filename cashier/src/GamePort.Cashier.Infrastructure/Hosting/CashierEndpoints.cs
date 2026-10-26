@@ -18,6 +18,7 @@ using GamePort.Cashier.Contracts.Requests;
 using GamePort.Cashier.Contracts.Responses;
 using GamePort.Cashier.Domain.Entities;
 using GamePort.Cashier.Domain.Enums;
+using GamePort.Cashier.Infrastructure.Data;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
@@ -106,7 +107,7 @@ public static class CashierEndpoints
             return device is null ? NotFound("دستگاه یافت نشد.") : Ok(device.ToResponse());
         }).RequireAuthorization(Permissions.DevicesView);
 
-        group.MapPost("", async (RegisterDeviceRequest request, RegisterDeviceHandler handler, CancellationToken ct) =>
+        group.MapPost("", async (RegisterDeviceRequest request, RegisterDeviceHandler handler, HttpContext httpContext, CancellationToken ct) =>
         {
             if (!Enum.TryParse<DeviceType>(request.Type, true, out var type))
             {
@@ -114,23 +115,168 @@ public static class CashierEndpoints
             }
 
             var result = await handler.HandleAsync(
-                new RegisterDeviceCommand(request.Name, type, request.IpAddress, request.MacAddress, request.HardwareInfo), ct);
+                new RegisterDeviceCommand(
+                    request.Name,
+                    type,
+                    request.IpAddress,
+                    request.MacAddress,
+                    request.HardwareInfo,
+                    request.ZoneId,
+                    request.PricingGroupId,
+                    request.DisplayOrder,
+                    request.ConsoleModel,
+                    request.ControllerCount,
+                    request.MaxPlayers,
+                    GetEmployeeId(httpContext)), ct);
 
             return result.IsSuccess
                 ? Ok(result.Value!.Device.ToRegisteredResponse(result.Value.ClientSecret))
                 : Fail(result.Error!);
         }).RequireAuthorization(Permissions.DevicesManage).WithValidation<RegisterDeviceRequest>();
 
-        group.MapDelete("/{id:guid}", async (Guid id, IDeviceRepository devices) =>
+        group.MapPut("/{id:guid}", async (
+            Guid id,
+            UpdateDeviceRequest request,
+            UpdateDeviceHandler handler,
+            HttpContext httpContext,
+            CancellationToken ct) =>
         {
-            var device = await devices.GetByIdAsync(id);
-            if (device is null)
+            if (!uint.TryParse(request.Xmin, out var xmin))
             {
-                return NotFound("دستگاه یافت نشد.");
+                return Fail("Xmin نامعتبر است.");
             }
 
-            await devices.DeleteAsync(id);
-            return Ok(new { id });
+            var result = await handler.HandleAsync(
+                new UpdateDeviceCommand(
+                    id,
+                    request.Name,
+                    request.IpAddress,
+                    request.MacAddress,
+                    request.ZoneId,
+                    request.PricingGroupId,
+                    request.DisplayOrder,
+                    request.MaintenanceNotes,
+                    request.ConsoleModel,
+                    request.ControllerCount,
+                    request.MaxPlayers,
+                    xmin,
+                    GetEmployeeId(httpContext)), ct);
+
+            if (result.IsSuccess)
+            {
+                return Ok(result.Device!.ToResponse());
+            }
+
+            return result.ErrorKind switch
+            {
+                UpdateDeviceError.NotFound => NotFound(result.Error!),
+                UpdateDeviceError.StaleVersion => Fail(result.Error!, StatusCodes.Status409Conflict),
+                _ => Fail(result.Error!)
+            };
+        }).RequireAuthorization(Permissions.DevicesManage).WithValidation<UpdateDeviceRequest>();
+
+        group.MapPatch("/{id:guid}/activation", async (
+            Guid id,
+            ActivationRequest request,
+            SetDeviceActivationHandler handler,
+            HttpContext httpContext,
+            CancellationToken ct) =>
+        {
+            if (!uint.TryParse(request.Xmin, out var xmin))
+            {
+                return Fail("Xmin نامعتبر است.");
+            }
+
+            var result = await handler.HandleAsync(
+                new SetDeviceActivationCommand(id, request.IsActive, xmin, GetEmployeeId(httpContext)), ct);
+
+            if (result.IsSuccess)
+            {
+                return Ok(result.Device!.ToResponse());
+            }
+
+            return result.ErrorKind switch
+            {
+                DeviceLifecycleError.NotFound => NotFound(result.Error!),
+                DeviceLifecycleError.StaleVersion => Fail(result.Error!, StatusCodes.Status409Conflict),
+                DeviceLifecycleError.Conflict => Fail(result.Error!, StatusCodes.Status409Conflict),
+                _ => Fail(result.Error!)
+            };
+        }).RequireAuthorization(Permissions.DevicesManage).WithValidation<ActivationRequest>();
+
+        group.MapPatch("/{id:guid}/operational-status", async (
+            Guid id,
+            OperationalStatusRequest request,
+            SetDeviceOperationalStatusHandler handler,
+            HttpContext httpContext,
+            CancellationToken ct) =>
+        {
+            if (!uint.TryParse(request.Xmin, out var xmin))
+            {
+                return Fail("Xmin نامعتبر است.");
+            }
+
+            if (!Enum.TryParse<OperationalStatus>(request.OperationalStatus, true, out var operationalStatus))
+            {
+                return Fail("وضعیت عملیاتی نامعتبر است. مقدار مجاز: Available یا Maintenance.");
+            }
+
+            var result = await handler.HandleAsync(
+                new SetDeviceOperationalStatusCommand(id, operationalStatus, request.MaintenanceNotes, xmin, GetEmployeeId(httpContext)), ct);
+
+            if (result.IsSuccess)
+            {
+                return Ok(result.Device!.ToResponse());
+            }
+
+            return result.ErrorKind switch
+            {
+                DeviceLifecycleError.NotFound => NotFound(result.Error!),
+                DeviceLifecycleError.StaleVersion => Fail(result.Error!, StatusCodes.Status409Conflict),
+                DeviceLifecycleError.Conflict => Fail(result.Error!, StatusCodes.Status409Conflict),
+                _ => Fail(result.Error!)
+            };
+        }).RequireAuthorization(Permissions.DevicesManage).WithValidation<OperationalStatusRequest>();
+
+        // DELETE requires an If-Match precondition carrying the device Xmin (uint).
+        // Accepted forms: `If-Match: 123` or ETag-style `If-Match: "123"`.
+        // No in-repo client called the previous unversioned DELETE (verified: ApiClient
+        // and all ViewModels only use GET/POST/PUT on /api/devices). External callers
+        // must GET the device first and send its Xmin; unversioned deletion is rejected
+        // with 400 to prevent accidental stale deletes.
+        group.MapDelete("/{id:guid}", async (
+            Guid id,
+            HttpContext httpContext,
+            DeleteDeviceHandler handler,
+            CancellationToken ct) =>
+        {
+            var ifMatch = httpContext.Request.Headers.IfMatch.ToString();
+            if (string.IsNullOrWhiteSpace(ifMatch))
+            {
+                return Fail("هدر If-Match با مقدار Xmin دستگاه الزامی است.");
+            }
+
+            var token = ifMatch.Trim().Trim('"');
+            if (!uint.TryParse(token, out var xmin))
+            {
+                return Fail("مقدار هدر If-Match نامعتبر است؛ باید Xmin دستگاه باشد.");
+            }
+
+            var result = await handler.HandleAsync(
+                new DeleteDeviceCommand(id, xmin, GetEmployeeId(httpContext)), ct);
+
+            if (result.IsSuccess)
+            {
+                return Ok(new { id });
+            }
+
+            return result.ErrorKind switch
+            {
+                DeviceLifecycleError.NotFound => NotFound(result.Error!),
+                DeviceLifecycleError.StaleVersion => Fail(result.Error!, StatusCodes.Status409Conflict),
+                DeviceLifecycleError.Conflict => Fail(result.Error!, StatusCodes.Status409Conflict),
+                _ => Fail(result.Error!)
+            };
         }).RequireAuthorization(Permissions.DevicesManage);
 
         group.MapPost("/{id:guid}/commands", async (
@@ -778,16 +924,19 @@ public static class CashierEndpoints
         }).RequireAuthorization(Permissions.ReportsView);
 
         endpoints.MapGet("/api/system/info", (
-            IConfiguration configuration, IBackupService backup, ICloudSyncClient cloud) =>
+            IConfiguration configuration, IBackupService backup, ICloudSyncClient cloud, CashierDbContext db) =>
         {
             var version = Assembly.GetEntryAssembly()?.GetName().Version?.ToString() ?? "1.0.0";
+
+            // Report the actual EF Core provider, not the config flag.
+            var databaseProvider = MapDatabaseProvider(db.Database.ProviderName);
 
             return Ok(new SystemInfoResponse
             {
                 Version = version,
                 MachineName = Environment.MachineName,
                 ServerUrls = configuration.GetServerUrls().ToList(),
-                DatabaseProvider = configuration.GetValue("Database:UseInMemory", true) ? "InMemory" : "PostgreSQL",
+                DatabaseProvider = databaseProvider,
                 AutoMigrate = configuration.GetValue("Database:AutoMigrate", true),
                 CloudConfigured = cloud.IsConfigured,
                 CloudBaseUrl = configuration.GetValue<string>("Cloud:BaseUrl"),
@@ -802,6 +951,29 @@ public static class CashierEndpoints
     {
         var value = context.User.FindFirst("employee_id")?.Value;
         return Guid.TryParse(value, out var id) && id != Guid.Empty ? id : null;
+    }
+
+    /// <summary>
+    /// Maps an EF Core provider name to a user-facing database provider label.
+    /// </summary>
+    internal static string MapDatabaseProvider(string? providerName)
+    {
+        if (string.IsNullOrWhiteSpace(providerName))
+        {
+            return "Unknown";
+        }
+
+        if (providerName.Contains("Npgsql", StringComparison.OrdinalIgnoreCase))
+        {
+            return "PostgreSQL";
+        }
+
+        if (providerName.Contains("InMemory", StringComparison.OrdinalIgnoreCase))
+        {
+            return "InMemory";
+        }
+
+        return "Unknown";
     }
 
     private static IResult Ok<T>(T data) => Results.Ok(new BaseResponse<T> { Success = true, Data = data });

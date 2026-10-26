@@ -10,4 +10,8 @@ public class PricingRule : BaseEntity
     public decimal PricePerHour { get; set; }
     public bool IsActive { get; set; } = true;
     public DateTime EffectiveFrom { get; set; } = DateTime.UtcNow;
+
+    // V2: optional link to a PricingGroup category. NULL = DeviceType fallback.
+    public Guid? PricingGroupId { get; set; }
+    public PricingGroup? PricingGroup { get; set; }
 }

@@ -27,11 +27,147 @@ public class RegisterDeviceRequestValidator : AbstractValidator<RegisterDeviceRe
     public RegisterDeviceRequestValidator()
     {
         RuleFor(x => x.Name).NotEmpty().MaximumLength(100);
+
         RuleFor(x => x.Type)
             .NotEmpty()
             .Must(t => Enum.TryParse<DeviceType>(t, true, out _))
             .WithMessage("نوع دستگاه نامعتبر است.");
-        RuleFor(x => x.IpAddress).NotEmpty().MaximumLength(45);
+
+        // IP: required for GamingPC, optional for PlayStation
+        RuleFor(x => x.IpAddress)
+            .NotEmpty()
+            .When(x => IsGamingPc(x.Type))
+            .WithMessage("آدرس IP برای رایانه گیمینگ الزامی است.");
+
+        RuleFor(x => x.IpAddress)
+            .MaximumLength(45)
+            .When(x => !string.IsNullOrWhiteSpace(x.IpAddress));
+
+        RuleFor(x => x.IpAddress)
+            .Must(BeValidIp)
+            .When(x => !string.IsNullOrWhiteSpace(x.IpAddress))
+            .WithMessage("آدرس IP نامعتبر است.");
+
+        RuleFor(x => x.MacAddress).MaximumLength(32);
+        RuleFor(x => x.HardwareInfo).MaximumLength(4000);
+        RuleFor(x => x.DisplayOrder).GreaterThanOrEqualTo(0);
+
+        // PS5-specific fields
+        RuleFor(x => x.ConsoleModel).MaximumLength(20)
+            .When(x => !string.IsNullOrWhiteSpace(x.ConsoleModel));
+
+        RuleFor(x => x.ControllerCount)
+            .InclusiveBetween(1, 4)
+            .When(x => x.ControllerCount.HasValue);
+
+        RuleFor(x => x.MaxPlayers)
+            .InclusiveBetween(1, 8)
+            .When(x => x.MaxPlayers.HasValue);
+    }
+
+    private static bool IsGamingPc(string type)
+        => Enum.TryParse<DeviceType>(type, true, out var t) && t == DeviceType.GamingPC;
+
+    private static bool BeValidIp(string? value)
+    {
+        if (!System.Net.IPAddress.TryParse(value!.Trim(), out var address))
+        {
+            return false;
+        }
+
+        return address.AddressFamily == System.Net.Sockets.AddressFamily.InterNetwork
+               || address.AddressFamily == System.Net.Sockets.AddressFamily.InterNetworkV6;
+    }
+}
+
+public class UpdateDeviceRequestValidator : AbstractValidator<UpdateDeviceRequest>
+{
+    public UpdateDeviceRequestValidator()
+    {
+        RuleFor(x => x.Name).NotEmpty().MaximumLength(100);
+        RuleFor(x => x.IpAddress).MaximumLength(45)
+            .When(x => !string.IsNullOrWhiteSpace(x.IpAddress));
+        RuleFor(x => x.IpAddress)
+            .Must(BeValidIp)
+            .When(x => !string.IsNullOrWhiteSpace(x.IpAddress))
+            .WithMessage("آدرس IP نامعتبر است.");
+        RuleFor(x => x.MacAddress).MaximumLength(32);
+        RuleFor(x => x.DisplayOrder).GreaterThanOrEqualTo(0);
+        RuleFor(x => x.MaintenanceNotes).MaximumLength(500);
+        RuleFor(x => x.ConsoleModel).MaximumLength(20)
+            .When(x => !string.IsNullOrWhiteSpace(x.ConsoleModel));
+        RuleFor(x => x.ControllerCount).InclusiveBetween(1, 4)
+            .When(x => x.ControllerCount.HasValue);
+        RuleFor(x => x.MaxPlayers).InclusiveBetween(1, 8)
+            .When(x => x.MaxPlayers.HasValue);
+        RuleFor(x => x.Xmin).NotEmpty().WithMessage("Xmin برای ویرایش الزامی است.");
+        RuleFor(x => x.Xmin)
+            .Must(x => uint.TryParse(x, out _))
+            .When(x => !string.IsNullOrWhiteSpace(x.Xmin))
+            .WithMessage("Xmin نامعتبر است.");
+    }
+
+    private static bool BeValidIp(string? value)
+    {
+        if (!System.Net.IPAddress.TryParse(value!.Trim(), out var address))
+        {
+            return false;
+        }
+
+        return address.AddressFamily == System.Net.Sockets.AddressFamily.InterNetwork
+               || address.AddressFamily == System.Net.Sockets.AddressFamily.InterNetworkV6;
+    }
+}
+
+public class ActivationRequestValidator : AbstractValidator<ActivationRequest>
+{
+    public ActivationRequestValidator()
+    {
+        RuleFor(x => x.Xmin).NotEmpty().WithMessage("Xmin برای تغییر وضعیت فعالی الزامی است.");
+        RuleFor(x => x.Xmin)
+            .Must(x => uint.TryParse(x, out _))
+            .When(x => !string.IsNullOrWhiteSpace(x.Xmin))
+            .WithMessage("Xmin نامعتبر است.");
+    }
+}
+
+public class OperationalStatusRequestValidator : AbstractValidator<OperationalStatusRequest>
+{
+    public OperationalStatusRequestValidator()
+    {
+        RuleFor(x => x.OperationalStatus)
+            .NotEmpty()
+            .Must(s => s is "Available" or "Maintenance")
+            .WithMessage("وضعیت عملیاتی فقط می‌تواند Available یا Maintenance باشد. InUse توسط چرخه نشست مدیریت می‌شود.");
+
+        RuleFor(x => x.MaintenanceNotes).MaximumLength(500);
+        RuleFor(x => x.Xmin).NotEmpty().WithMessage("Xmin برای تغییر وضعیت الزامی است.");
+        RuleFor(x => x.Xmin)
+            .Must(x => uint.TryParse(x, out _))
+            .When(x => !string.IsNullOrWhiteSpace(x.Xmin))
+            .WithMessage("Xmin نامعتبر است.");
+    }
+}
+
+public class ZoneRequestValidator : AbstractValidator<ZoneRequest>
+{
+    public ZoneRequestValidator()
+    {
+        RuleFor(x => x.Name).NotEmpty().MaximumLength(100);
+        RuleFor(x => x.DisplayOrder).GreaterThanOrEqualTo(0);
+    }
+}
+
+public class PricingGroupRequestValidator : AbstractValidator<PricingGroupRequest>
+{
+    public PricingGroupRequestValidator()
+    {
+        RuleFor(x => x.Name).NotEmpty().MaximumLength(100);
+        RuleFor(x => x.Description).MaximumLength(500);
+        RuleFor(x => x.DeviceType)
+            .Must(t => string.IsNullOrWhiteSpace(t) ||
+                       Enum.TryParse<DeviceType>(t, true, out _))
+            .WithMessage("نوع دستگاه نامعتبر است. مقدار مجاز: GamingPC, PlayStation یا خالی.");
     }
 }
 

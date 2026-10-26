@@ -1,0 +1,568 @@
+﻿<UserControl x:Class="GamePort.Cashier.Views.NetworkDevicesSettingsView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             mc:Ignorable="d"
+             d:DesignHeight="720" d:DesignWidth="900"
+             FlowDirection="RightToLeft"
+             FontFamily="{StaticResource Vazirmatn}">
+
+    <UserControl.Resources>
+        <BooleanToVisibilityConverter x:Key="BoolToVis"/>
+
+        <!-- ===== Metric card (summary counters + infrastructure) ===== -->
+        <Style x:Key="MetricCard" TargetType="Border">
+            <Setter Property="Background" Value="#161A20"/>
+            <Setter Property="BorderBrush" Value="#1A2028"/>
+            <Setter Property="BorderThickness" Value="1"/>
+            <Setter Property="CornerRadius" Value="8"/>
+            <Setter Property="Padding" Value="16,14"/>
+            <Setter Property="MinHeight" Value="80"/>
+        </Style>
+
+        <!-- ===== Filter chip ===== -->
+        <Style x:Key="FilterChip" TargetType="RadioButton">
+            <Setter Property="Foreground" Value="#94A3B8"/>
+            <Setter Property="FontFamily" Value="{StaticResource Vazirmatn}"/>
+            <Setter Property="FontSize" Value="11"/>
+            <Setter Property="Cursor" Value="Hand"/>
+            <Setter Property="Margin" Value="0,0,5,0"/>
+            <Setter Property="VerticalAlignment" Value="Center"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="RadioButton">
+                        <Border x:Name="Bd" Background="#161A20" BorderBrush="#1A2028"
+                                BorderThickness="1" CornerRadius="6" Padding="12,6">
+                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsChecked" Value="True">
+                                <Setter TargetName="Bd" Property="Background" Value="#1B2A4A"/>
+                                <Setter TargetName="Bd" Property="BorderBrush" Value="#4C8DFF"/>
+                                <Setter Property="Foreground" Value="#4C8DFF"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <!-- ===== Refresh button ===== -->
+        <Style x:Key="RefreshButton" TargetType="Button">
+            <Setter Property="Background" Value="#161A20"/>
+            <Setter Property="Foreground" Value="#94A3B8"/>
+            <Setter Property="FontFamily" Value="{StaticResource Vazirmatn}"/>
+            <Setter Property="FontSize" Value="12"/>
+            <Setter Property="Padding" Value="14,8"/>
+            <Setter Property="Cursor" Value="Hand"/>
+            <Setter Property="VerticalAlignment" Value="Center"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Border x:Name="Bd" Background="{TemplateBinding Background}"
+                                BorderBrush="#1A2028" BorderThickness="1" CornerRadius="6"
+                                Padding="{TemplateBinding Padding}">
+                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="Bd" Property="Background" Value="#1B2027"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <!-- ===== Primary Add Device button ===== -->
+        <Style x:Key="PrimaryAddButton" TargetType="Button">
+            <Setter Property="Background" Value="#4C8DFF"/>
+            <Setter Property="Foreground" Value="#0B0D10"/>
+            <Setter Property="FontFamily" Value="{StaticResource Vazirmatn}"/>
+            <Setter Property="FontSize" Value="12"/>
+            <Setter Property="FontWeight" Value="SemiBold"/>
+            <Setter Property="Padding" Value="16,8"/>
+            <Setter Property="Cursor" Value="Hand"/>
+            <Setter Property="VerticalAlignment" Value="Center"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Border x:Name="Bd" Background="{TemplateBinding Background}" CornerRadius="6"
+                                Padding="{TemplateBinding Padding}">
+                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="Bd" Property="Background" Value="#67A0FF"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <!-- ===== Retry button ===== -->
+        <Style x:Key="RetryButton" TargetType="Button">
+            <Setter Property="Background" Value="#1B2027"/>
+            <Setter Property="Foreground" Value="#4C8DFF"/>
+            <Setter Property="FontFamily" Value="{StaticResource Vazirmatn}"/>
+            <Setter Property="FontSize" Value="12"/>
+            <Setter Property="Padding" Value="14,8"/>
+            <Setter Property="Cursor" Value="Hand"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Border x:Name="Bd" Background="{TemplateBinding Background}"
+                                BorderBrush="#4C8DFF" BorderThickness="1" CornerRadius="6"
+                                Padding="{TemplateBinding Padding}">
+                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                        </Border>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+    </UserControl.Resources>
+
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="Auto"/>
+        </Grid.RowDefinitions>
+
+        <!-- ===== HEADER ===== -->
+        <Border Grid.Row="0" Background="#111419" BorderBrush="#1A2028" BorderThickness="1"
+                CornerRadius="8" Padding="20,16" Margin="0,0,0,12" MinHeight="80">
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="Auto"/>
+                </Grid.ColumnDefinitions>
+
+                <StackPanel Grid.Column="0" Orientation="Horizontal">
+                    <Border Width="40" Height="40" CornerRadius="8" Background="#161A20"
+                            BorderBrush="#1A2028" BorderThickness="1" Margin="0,0,14,0"
+                            VerticalAlignment="Center">
+                        <TextBlock Text="&#xE30A;" FontFamily="{StaticResource MaterialIcons}"
+                                   FontSize="20" Foreground="#4C8DFF"
+                                   HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                    </Border>
+                    <StackPanel VerticalAlignment="Center">
+                        <StackPanel Orientation="Horizontal">
+                            <TextBlock Text="شبکه و دستگاه‌ها" FontSize="22" FontWeight="Bold"
+                                       Foreground="#F1F5F9"/>
+                            <Border Background="#1B2027" CornerRadius="5" Padding="10,3" Margin="12,0,0,0"
+                                    VerticalAlignment="Center" BorderBrush="#1A2028" BorderThickness="1">
+                                <TextBlock Text="{Binding AppVersion}" FontFamily="JetBrains Mono"
+                                           FontSize="11" Foreground="#4C8DFF" FlowDirection="LeftToRight"/>
+                            </Border>
+                        </StackPanel>
+                        <TextBlock Text="ثبت، پیکربندی و موجودی سیستم‌های GamePort"
+                                   FontSize="13" Foreground="#64748B" Margin="0,4,0,0"/>
+                    </StackPanel>
+                </StackPanel>
+
+                <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center">
+                    <Border Background="#161A20" BorderBrush="#1A2028" BorderThickness="1"
+                            CornerRadius="6" Padding="12,8" Margin="0,0,10,0">
+                        <StackPanel Orientation="Horizontal">
+                            <Ellipse Width="8" Height="8" Fill="#10B981" VerticalAlignment="Center" Margin="0,0,7,0"/>
+                            <TextBlock FontSize="12" Foreground="#94A3B8" VerticalAlignment="Center">
+                                <Run Text="کلاینت: "/>
+                                <Run Text="آنلاین" Foreground="#10B981" FontWeight="Medium"/>
+                            </TextBlock>
+                        </StackPanel>
+                    </Border>
+                    <Button Style="{StaticResource RefreshButton}" Command="{Binding RefreshCommand}"
+                            Content="بروزرسانی" Margin="0,0,10,0"/>
+                    <Button Style="{StaticResource PrimaryAddButton}"
+                            Content="+ افزودن دستگاه"
+                            Command="{Binding RequestAddDeviceCommand}"/>
+                </StackPanel>
+            </Grid>
+        </Border>
+
+        <!-- ===== SUMMARY COUNTERS + TOOLBAR ===== -->
+        <StackPanel Grid.Row="1" Margin="0,0,0,12">
+            <!-- Six metric cards -->
+            <Grid Margin="0,0,0,10">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*" MinWidth="120"/>
+                    <ColumnDefinition Width="*" MinWidth="120"/>
+                    <ColumnDefinition Width="*" MinWidth="120"/>
+                    <ColumnDefinition Width="*" MinWidth="120"/>
+                    <ColumnDefinition Width="*" MinWidth="120"/>
+                    <ColumnDefinition Width="*" MinWidth="120"/>
+                </Grid.ColumnDefinitions>
+
+                <Border Grid.Column="0" Style="{StaticResource MetricCard}" Margin="0,0,5,0">
+                    <StackPanel>
+                        <TextBlock Text="کل دستگاه‌ها" FontSize="12" Foreground="#64748B" Margin="0,0,0,4"/>
+                        <TextBlock Text="{Binding TotalDevicesText}" FontFamily="JetBrains Mono"
+                                   FontSize="28" FontWeight="Bold" Foreground="#F1F5F9"
+                                   FlowDirection="LeftToRight" LineHeight="32"/>
+                    </StackPanel>
+                </Border>
+                <Border Grid.Column="1" Style="{StaticResource MetricCard}" Margin="5,0">
+                    <StackPanel>
+                        <TextBlock Text="رایانه (PC)" FontSize="12" Foreground="#64748B" Margin="0,0,0,4"/>
+                        <TextBlock Text="{Binding PcCountText}" FontFamily="JetBrains Mono"
+                                   FontSize="28" FontWeight="Bold" Foreground="#4C8DFF"
+                                   FlowDirection="LeftToRight" LineHeight="32"/>
+                    </StackPanel>
+                </Border>
+                <Border Grid.Column="2" Style="{StaticResource MetricCard}" Margin="5,0">
+                    <StackPanel>
+                        <TextBlock Text="کنسول (PS5)" FontSize="12" Foreground="#64748B" Margin="0,0,0,4"/>
+                        <TextBlock Text="{Binding Ps5CountText}" FontFamily="JetBrains Mono"
+                                   FontSize="28" FontWeight="Bold" Foreground="#8B5CF6"
+                                   FlowDirection="LeftToRight" LineHeight="32"/>
+                    </StackPanel>
+                </Border>
+                <Border Grid.Column="3" Style="{StaticResource MetricCard}" Margin="5,0">
+                    <StackPanel>
+                        <TextBlock Text="متصل" FontSize="12" Foreground="#64748B" Margin="0,0,0,4"/>
+                        <TextBlock Text="{Binding ConnectedCountText}" FontFamily="JetBrains Mono"
+                                   FontSize="28" FontWeight="Bold" Foreground="#10B981"
+                                   FlowDirection="LeftToRight" LineHeight="32"/>
+                    </StackPanel>
+                </Border>
+                <Border Grid.Column="4" Style="{StaticResource MetricCard}" Margin="5,0">
+                    <StackPanel>
+                        <TextBlock Text="قطع ارتباط" FontSize="12" Foreground="#64748B" Margin="0,0,0,4"/>
+                        <TextBlock Text="{Binding DisconnectedCountText}" FontFamily="JetBrains Mono"
+                                   FontSize="28" FontWeight="Bold" Foreground="#EF4444"
+                                   FlowDirection="LeftToRight" LineHeight="32"/>
+                    </StackPanel>
+                </Border>
+                <Border Grid.Column="5" Style="{StaticResource MetricCard}" Margin="5,0,0,0">
+                    <StackPanel>
+                        <TextBlock Text="تعمیرات" FontSize="12" Foreground="#64748B" Margin="0,0,0,4"/>
+                        <TextBlock Text="{Binding MaintenanceCountText}" FontFamily="JetBrains Mono"
+                                   FontSize="28" FontWeight="Bold" Foreground="#F59E0B"
+                                   FlowDirection="LeftToRight" LineHeight="32"/>
+                    </StackPanel>
+                </Border>
+            </Grid>
+
+            <!-- Toolbar: search + type + status (Add Device & Refresh moved to header) -->
+            <Grid Margin="0,0,0,0">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="Auto"/>
+                    <ColumnDefinition Width="Auto"/>
+                    <ColumnDefinition Width="*" MinWidth="200"/>
+                </Grid.ColumnDefinitions>
+
+                <!-- Type filter -->
+                <StackPanel Grid.Column="0" Orientation="Horizontal" VerticalAlignment="Center" Margin="0,0,10,0">
+                    <TextBlock Text="نوع:" FontSize="11" Foreground="#64748B" VerticalAlignment="Center" Margin="0,0,5,0"/>
+                    <RadioButton Style="{StaticResource FilterChip}" Content="همه" GroupName="TypeFilter"
+                                 IsChecked="{Binding IsTypeAll, Mode=OneWay}"
+                                 Command="{Binding SetTypeFilterCommand}" CommandParameter=""/>
+                    <RadioButton Style="{StaticResource FilterChip}" Content="PC" GroupName="TypeFilter"
+                                 IsChecked="{Binding IsTypePc, Mode=OneWay}"
+                                 Command="{Binding SetTypeFilterCommand}" CommandParameter="PC"/>
+                    <RadioButton Style="{StaticResource FilterChip}" Content="PS5" GroupName="TypeFilter"
+                                 IsChecked="{Binding IsTypePs5, Mode=OneWay}"
+                                 Command="{Binding SetTypeFilterCommand}" CommandParameter="PS5"/>
+                </StackPanel>
+
+                <!-- Status filter -->
+                <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center" Margin="0,0,10,0">
+                    <TextBlock Text="وضعیت:" FontSize="11" Foreground="#64748B" VerticalAlignment="Center" Margin="0,0,5,0"/>
+                    <RadioButton Style="{StaticResource FilterChip}" Content="همه" GroupName="StatusFilter"
+                                 IsChecked="{Binding IsStatusAll, Mode=OneWay}"
+                                 Command="{Binding SetStatusFilterCommand}" CommandParameter=""/>
+                    <RadioButton Style="{StaticResource FilterChip}" Content="آماده" GroupName="StatusFilter"
+                                 IsChecked="{Binding IsStatusAvailable, Mode=OneWay}"
+                                 Command="{Binding SetStatusFilterCommand}" CommandParameter="Available"/>
+                    <RadioButton Style="{StaticResource FilterChip}" Content="در حال استفاده" GroupName="StatusFilter"
+                                 IsChecked="{Binding IsStatusInUse, Mode=OneWay}"
+                                 Command="{Binding SetStatusFilterCommand}" CommandParameter="InUse"/>
+                    <RadioButton Style="{StaticResource FilterChip}" Content="آفلاین" GroupName="StatusFilter"
+                                 IsChecked="{Binding IsStatusOffline, Mode=OneWay}"
+                                 Command="{Binding SetStatusFilterCommand}" CommandParameter="Offline"/>
+                    <RadioButton Style="{StaticResource FilterChip}" Content="قطع ارتباط" GroupName="StatusFilter"
+                                 IsChecked="{Binding IsStatusDisconnected, Mode=OneWay}"
+                                 Command="{Binding SetStatusFilterCommand}" CommandParameter="Disconnected"/>
+                    <RadioButton Style="{StaticResource FilterChip}" Content="تعمیرات" GroupName="StatusFilter"
+                                 IsChecked="{Binding IsStatusMaintenance, Mode=OneWay}"
+                                 Command="{Binding SetStatusFilterCommand}" CommandParameter="Maintenance"/>
+                </StackPanel>
+
+                <!-- Search -->
+                <Border Grid.Column="2" Background="#161A20" BorderBrush="#1A2028" BorderThickness="1"
+                        CornerRadius="6" Padding="12,0" Height="36" VerticalAlignment="Center">
+                    <Grid>
+                        <TextBox x:Name="SearchBox"
+                                 Text="{Binding SearchText, UpdateSourceTrigger=PropertyChanged}"
+                                 Background="Transparent" BorderThickness="0" FontSize="13"
+                                 FontFamily="{StaticResource Vazirmatn}" Foreground="#F1F5F9"
+                                 CaretBrush="#F1F5F9" VerticalContentAlignment="Center" Padding="0"/>
+                        <TextBlock Text="جستجو بر اساس نام، IP یا MAC..."
+                                   FontSize="12" Foreground="#475569" VerticalAlignment="Center"
+                                   IsHitTestVisible="False">
+                            <TextBlock.Style>
+                                <Style TargetType="TextBlock">
+                                    <Setter Property="Visibility" Value="Collapsed"/>
+                                    <Style.Triggers>
+                                        <DataTrigger Binding="{Binding Text, ElementName=SearchBox}" Value="">
+                                            <Setter Property="Visibility" Value="Visible"/>
+                                        </DataTrigger>
+                                    </Style.Triggers>
+                                </Style>
+                            </TextBlock.Style>
+                        </TextBlock>
+                    </Grid>
+                </Border>
+            </Grid>
+
+            <!-- Add Device placeholder notice -->
+            <Border Background="#1B2027" BorderBrush="#4C8DFF" BorderThickness="1" CornerRadius="6"
+                    Padding="14,10" Margin="0,10,0,0"
+                    Visibility="{Binding IsAddDeviceNoticeVisible, Converter={StaticResource BoolToVis}}">
+                <Grid>
+                    <TextBlock Text="{Binding AddDeviceNotice}" FontSize="12" Foreground="#94A3B8"
+                               VerticalAlignment="Center"/>
+                    <Button Content="بستن" HorizontalAlignment="Left" VerticalAlignment="Center"
+                            Background="Transparent" Foreground="#64748B" BorderThickness="0"
+                            FontSize="12" Cursor="Hand" Padding="8,4"
+                            Command="{Binding DismissAddDeviceNoticeCommand}"/>
+                </Grid>
+            </Border>
+        </StackPanel>
+
+        <!-- ===== DEVICE TABLE / STATES ===== -->
+        <Border Grid.Row="2" Background="#111419" BorderBrush="#1A2028" BorderThickness="1"
+                CornerRadius="8" Margin="0,0,0,12" MinHeight="200">
+            <Grid>
+                <!-- Loading -->
+                <StackPanel VerticalAlignment="Center" HorizontalAlignment="Center" Margin="0,40"
+                            Visibility="{Binding IsDevicesLoading, Converter={StaticResource BoolToVis}}">
+                    <ProgressBar IsIndeterminate="True" Width="200" Height="4"
+                                 Foreground="#4C8DFF" Background="#1A2028" BorderThickness="0"/>
+                    <TextBlock Text="در حال دریافت اطلاعات دستگاه‌ها..."
+                               FontSize="13" Foreground="#64748B" HorizontalAlignment="Center" Margin="0,14,0,0"/>
+                </StackPanel>
+
+                <!-- Error -->
+                <StackPanel VerticalAlignment="Center" HorizontalAlignment="Center" Margin="0,40"
+                            Visibility="{Binding HasLoadError, Converter={StaticResource BoolToVis}}">
+                    <TextBlock Text="&#xE002;" FontFamily="{StaticResource MaterialIcons}" FontSize="36"
+                               Foreground="#EF4444" HorizontalAlignment="Center"/>
+                    <TextBlock Text="دریافت اطلاعات دستگاه‌ها با خطا مواجه شد."
+                               FontSize="14" Foreground="#F1F5F9" HorizontalAlignment="Center" Margin="0,12,0,0"/>
+                    <Button Style="{StaticResource RetryButton}" Content="تلاش مجدد"
+                            Command="{Binding RefreshCommand}" HorizontalAlignment="Center" Margin="0,14,0,0"/>
+                </StackPanel>
+
+                <!-- Empty -->
+                <StackPanel VerticalAlignment="Center" HorizontalAlignment="Center" Margin="0,40"
+                            Visibility="{Binding IsEmpty, Converter={StaticResource BoolToVis}}">
+                    <TextBlock Text="&#xE30A;" FontFamily="{StaticResource MaterialIcons}" FontSize="40"
+                               Foreground="#334155" HorizontalAlignment="Center"/>
+                    <TextBlock Text="هیچ دستگاهی ثبت نشده است" FontSize="15" FontWeight="SemiBold"
+                               Foreground="#F1F5F9" HorizontalAlignment="Center" Margin="0,14,0,0"/>
+                    <TextBlock Text="برای شروع، اولین سیستم یا کنسول مجموعه را ثبت کنید."
+                               FontSize="12" Foreground="#64748B" HorizontalAlignment="Center" Margin="0,8,0,0"/>
+                    <Button Style="{StaticResource PrimaryAddButton}" Content="+ افزودن دستگاه"
+                            Command="{Binding RequestAddDeviceCommand}" HorizontalAlignment="Center" Margin="0,16,0,0"/>
+                </StackPanel>
+
+                <!-- Table -->
+                <Grid Visibility="{Binding ShowTable, Converter={StaticResource BoolToVis}}">
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="*"/>
+                    </Grid.RowDefinitions>
+
+                    <!-- Table header -->
+                    <Border Grid.Row="0" Background="#0E1116" BorderBrush="#1A2028"
+                            BorderThickness="0,0,0,1" Padding="16,12" MinHeight="44">
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="1.5*"/>
+                                <ColumnDefinition Width="0.7*"/>
+                                <ColumnDefinition Width="1.2*"/>
+                                <ColumnDefinition Width="1.2*"/>
+                                <ColumnDefinition Width="1*"/>
+                                <ColumnDefinition Width="0.8*"/>
+                                <ColumnDefinition Width="1*"/>
+                                <ColumnDefinition Width="40"/>
+                            </Grid.ColumnDefinitions>
+                            <TextBlock Grid.Column="0" Text="دستگاه" FontSize="11" FontWeight="SemiBold" Foreground="#64748B" VerticalAlignment="Center"/>
+                            <TextBlock Grid.Column="1" Text="نوع" FontSize="11" FontWeight="SemiBold" Foreground="#64748B" VerticalAlignment="Center"/>
+                            <TextBlock Grid.Column="2" Text="IP Address" FontFamily="JetBrains Mono" FontSize="11"
+                                       Foreground="#64748B" FlowDirection="LeftToRight" VerticalAlignment="Center"/>
+                            <TextBlock Grid.Column="3" Text="MAC Hardware" FontFamily="JetBrains Mono" FontSize="11"
+                                       Foreground="#64748B" FlowDirection="LeftToRight" VerticalAlignment="Center"/>
+                            <TextBlock Grid.Column="4" Text="وضعیت عملیاتی" FontSize="11" FontWeight="SemiBold" Foreground="#64748B" VerticalAlignment="Center"/>
+                            <TextBlock Grid.Column="5" Text="اتصال" FontSize="11" FontWeight="SemiBold" Foreground="#64748B" VerticalAlignment="Center"/>
+                            <TextBlock Grid.Column="6" Text="آخرین تماس" FontSize="11" FontWeight="SemiBold" Foreground="#64748B" VerticalAlignment="Center"/>
+                            <TextBlock Grid.Column="7" Text=""/>
+                        </Grid>
+                    </Border>
+
+                    <!-- Table rows -->
+                    <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Auto">
+                        <ItemsControl ItemsSource="{Binding Devices}">
+                            <ItemsControl.ItemTemplate>
+                                <DataTemplate>
+                                    <Border BorderBrush="#1A2028" BorderThickness="0,0,0,1" Padding="16,12" MinHeight="56">
+                                        <Grid>
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="1.5*"/>
+                                                <ColumnDefinition Width="0.7*"/>
+                                                <ColumnDefinition Width="1.2*"/>
+                                                <ColumnDefinition Width="1.2*"/>
+                                                <ColumnDefinition Width="1*"/>
+                                                <ColumnDefinition Width="0.8*"/>
+                                                <ColumnDefinition Width="1*"/>
+                                                <ColumnDefinition Width="40"/>
+                                            </Grid.ColumnDefinitions>
+
+                                            <!-- Device name -->
+                                            <StackPanel Grid.Column="0" Orientation="Horizontal" VerticalAlignment="Center">
+                                                <Border Width="10" Height="10" CornerRadius="5"
+                                                        Background="{Binding ConnectionBrushHex}"
+                                                        VerticalAlignment="Center" Margin="0,0,10,0"/>
+                                                <TextBlock Text="{Binding Name}" FontSize="14" FontWeight="Medium"
+                                                           Foreground="#F1F5F9" VerticalAlignment="Center"
+                                                           TextTrimming="CharacterEllipsis"/>
+                                            </StackPanel>
+
+                                            <!-- Type badge -->
+                                            <Border Grid.Column="1" Background="#161A20" BorderBrush="#1A2028"
+                                                    BorderThickness="1" CornerRadius="5" Padding="10,4"
+                                                    HorizontalAlignment="Left" VerticalAlignment="Center">
+                                                <TextBlock Text="{Binding TypeDisplay}" FontFamily="JetBrains Mono"
+                                                           FontSize="12" Foreground="#4C8DFF" FlowDirection="LeftToRight"/>
+                                            </Border>
+
+                                            <!-- IP -->
+                                            <TextBlock Grid.Column="2" Text="{Binding IpAddress}"
+                                                       FontFamily="JetBrains Mono" FontSize="12"
+                                                       Foreground="#E2E8F0" VerticalAlignment="Center"
+                                                       FlowDirection="LeftToRight"/>
+
+                                            <!-- MAC -->
+                                            <TextBlock Grid.Column="3" Text="{Binding MacAddress}"
+                                                       FontFamily="JetBrains Mono" FontSize="11"
+                                                       Foreground="#94A3B8" VerticalAlignment="Center"
+                                                       FlowDirection="LeftToRight"/>
+
+                                            <!-- Operational status -->
+                                            <Border Grid.Column="4" Background="#161A20" BorderBrush="#1A2028"
+                                                    BorderThickness="1" CornerRadius="5" Padding="10,4"
+                                                    HorizontalAlignment="Left" VerticalAlignment="Center">
+                                                <StackPanel Orientation="Horizontal">
+                                                    <Ellipse Width="7" Height="7" Fill="{Binding StatusBrushHex}"
+                                                             VerticalAlignment="Center" Margin="0,0,6,0"/>
+                                                    <TextBlock Text="{Binding StatusDisplay}" FontSize="11"
+                                                               Foreground="{Binding StatusBrushHex}"
+                                                               VerticalAlignment="Center"/>
+                                                </StackPanel>
+                                            </Border>
+
+                                            <!-- Connection -->
+                                            <Border Grid.Column="5" Background="#161A20" BorderBrush="#1A2028"
+                                                    BorderThickness="1" CornerRadius="5" Padding="10,4"
+                                                    HorizontalAlignment="Left" VerticalAlignment="Center">
+                                                <TextBlock Text="{Binding ConnectionDisplay}" FontSize="11"
+                                                           Foreground="{Binding ConnectionBrushHex}"
+                                                           VerticalAlignment="Center"/>
+                                            </Border>
+
+                                            <!-- Last heartbeat -->
+                                            <TextBlock Grid.Column="6" Text="{Binding LastHeartbeatDisplay}"
+                                                       FontSize="11" Foreground="#94A3B8" VerticalAlignment="Center"/>
+
+                                            <!-- Overflow (visual only — no fake edit/delete) -->
+                                            <Border Grid.Column="7" Width="32" Height="32" CornerRadius="5"
+                                                    VerticalAlignment="Center" HorizontalAlignment="Center"
+                                                    ToolTip="اقدامات پشتیبانی نمی‌شود">
+                                                <TextBlock Text="&#xE5D4;" FontFamily="{StaticResource MaterialIcons}"
+                                                           FontSize="18" Foreground="#334155"
+                                                           HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                            </Border>
+                                        </Grid>
+                                    </Border>
+                                </DataTemplate>
+                            </ItemsControl.ItemTemplate>
+                        </ItemsControl>
+                    </ScrollViewer>
+                </Grid>
+            </Grid>
+        </Border>
+
+        <!-- ===== INFRASTRUCTURE (real system data only) ===== -->
+        <Border Grid.Row="3" Background="#111419" BorderBrush="#1A2028" BorderThickness="1"
+                CornerRadius="8" Padding="20,16">
+            <StackPanel>
+                <!-- Heading -->
+                <Grid Margin="0,0,0,12">
+                    <StackPanel Orientation="Horizontal">
+                        <TextBlock Text="&#xE896;" FontFamily="{StaticResource MaterialIcons}" FontSize="18"
+                                   Foreground="#4C8DFF" VerticalAlignment="Center" Margin="0,0,10,0"/>
+                        <TextBlock Text="وضعیت زیرساخت و ارتباطات سرور" FontSize="14" FontWeight="SemiBold"
+                                   Foreground="#F1F5F9" VerticalAlignment="Center"/>
+                    </StackPanel>
+                    <ProgressBar IsIndeterminate="True" Width="80" Height="3"
+                                 Foreground="#4C8DFF" Background="#1A2028" BorderThickness="0"
+                                 HorizontalAlignment="Left" VerticalAlignment="Center"
+                                 Visibility="{Binding IsInfrastructureLoading, Converter={StaticResource BoolToVis}}"/>
+                </Grid>
+
+                <!-- Four infrastructure cards -->
+                <Grid Margin="0,0,0,0">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*" MinWidth="140"/>
+                        <ColumnDefinition Width="*" MinWidth="140"/>
+                        <ColumnDefinition Width="*" MinWidth="140"/>
+                        <ColumnDefinition Width="*" MinWidth="140"/>
+                    </Grid.ColumnDefinitions>
+
+                    <Border Grid.Column="0" Style="{StaticResource MetricCard}" Margin="0,0,5,0" MinHeight="72">
+                        <StackPanel VerticalAlignment="Center">
+                            <TextBlock Text="نام سیستم" FontSize="11" Foreground="#64748B" Margin="0,0,0,4"/>
+                            <TextBlock Text="{Binding MachineName}" FontFamily="JetBrains Mono" FontSize="12"
+                                       Foreground="#F1F5F9" FlowDirection="LeftToRight" TextTrimming="CharacterEllipsis"/>
+                        </StackPanel>
+                    </Border>
+                    <Border Grid.Column="1" Style="{StaticResource MetricCard}" Margin="5,0" MinHeight="72">
+                        <StackPanel VerticalAlignment="Center">
+                            <TextBlock Text="ارائه‌دهنده پایگاه داده" FontSize="11" Foreground="#64748B" Margin="0,0,0,4"/>
+                            <TextBlock Text="{Binding DatabaseProvider}" FontFamily="JetBrains Mono" FontSize="12"
+                                       Foreground="#4C8DFF" FlowDirection="LeftToRight"/>
+                        </StackPanel>
+                    </Border>
+                    <Border Grid.Column="2" Style="{StaticResource MetricCard}" Margin="5,0" MinHeight="72">
+                        <StackPanel VerticalAlignment="Center">
+                            <TextBlock Text="Cloud Sync" FontSize="11" Foreground="#64748B" Margin="0,0,0,4"/>
+                            <TextBlock Text="{Binding CloudConfiguredText}" FontSize="12" Foreground="#94A3B8"/>
+                        </StackPanel>
+                    </Border>
+                    <Border Grid.Column="3" Style="{StaticResource MetricCard}" Margin="5,0,0,0" MinHeight="72">
+                        <StackPanel VerticalAlignment="Center">
+                            <TextBlock Text="LAN / شبکه" FontSize="11" Foreground="#64748B" Margin="0,0,0,4"/>
+                            <TextBlock Text="{Binding LanInfoText}" FontSize="12" Foreground="#64748B"/>
+                        </StackPanel>
+                    </Border>
+                </Grid>
+
+                <!-- Server URLs row -->
+                <Border Background="#0E1116" BorderBrush="#1A2028" BorderThickness="1" CornerRadius="6"
+                        Padding="14,10" Margin="0,10,0,0">
+                    <Grid>
+                        <TextBlock Text="آدرس‌های سرور" FontSize="11" Foreground="#64748B" VerticalAlignment="Center"/>
+                        <TextBlock Text="{Binding ServerUrlsText}" FontFamily="JetBrains Mono" FontSize="11"
+                                   Foreground="#94A3B8" HorizontalAlignment="Left" VerticalAlignment="Center"
+                                   FlowDirection="LeftToRight"/>
+                    </Grid>
+                </Border>
+            </StackPanel>
+        </Border>
+    </Grid>
+</UserControl>

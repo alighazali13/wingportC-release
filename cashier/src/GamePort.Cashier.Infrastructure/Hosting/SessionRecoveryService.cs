@@ -1,3 +1,4 @@
+using GamePort.Cashier.Application.Common;
 using GamePort.Cashier.Application.Interfaces;
 using GamePort.Cashier.Domain.Enums;
 using Microsoft.Extensions.DependencyInjection;
@@ -34,9 +35,10 @@ public class SessionRecoveryService : BackgroundService
             foreach (var session in openSessions)
             {
                 var device = allDevices.FirstOrDefault(d => d.Id == session.DeviceId);
-                if (device is not null && device.Status is not (DeviceStatus.InUse or DeviceStatus.Maintenance))
+                if (device is not null
+                    && device.OperationalStatus is not (Domain.Enums.OperationalStatus.InUse or Domain.Enums.OperationalStatus.Maintenance))
                 {
-                    device.Status = DeviceStatus.InUse;
+                    DeviceStateTransitions.MarkSessionStart(device);
                     await devices.UpdateAsync(device);
                     repaired++;
                 }
@@ -44,9 +46,10 @@ public class SessionRecoveryService : BackgroundService
 
             foreach (var device in allDevices)
             {
-                if (device.Status == DeviceStatus.InUse && !openDeviceIds.Contains(device.Id))
+                if (device.OperationalStatus == Domain.Enums.OperationalStatus.InUse && !openDeviceIds.Contains(device.Id))
                 {
-                    device.Status = DeviceStatus.Available;
+                    // InUse → Available only; Maintenance, connectivity and IsActive untouched.
+                    DeviceStateTransitions.MarkSessionEnd(device);
                     await devices.UpdateAsync(device);
                     repaired++;
                 }

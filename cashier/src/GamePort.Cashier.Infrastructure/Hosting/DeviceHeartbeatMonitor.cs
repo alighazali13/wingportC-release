@@ -1,5 +1,5 @@
+using GamePort.Cashier.Application.Common;
 using GamePort.Cashier.Application.Interfaces;
-using GamePort.Cashier.Domain.Enums;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
@@ -68,10 +68,9 @@ public class DeviceHeartbeatMonitor : BackgroundService
             if (device.LastHeartbeat is null || device.LastHeartbeat < threshold)
             {
                 device.IsConnected = false;
-                if (device.Status != DeviceStatus.Maintenance)
-                {
-                    device.Status = DeviceStatus.Disconnected;
-                }
+                // Connectivity only: timeout never changes OperationalStatus and
+                // never clears Maintenance (legacy Status preserved by the helper).
+                DeviceStateTransitions.MarkClientDisconnected(device);
 
                 await devices.UpdateAsync(device);
                 _logger.LogWarning("Device {DeviceId} marked disconnected due to heartbeat timeout.", device.Id);

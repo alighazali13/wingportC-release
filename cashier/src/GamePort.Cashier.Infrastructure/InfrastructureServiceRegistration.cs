@@ -12,6 +12,19 @@ public static class InfrastructureServiceRegistration
 {
     public static IServiceCollection AddInfrastructureServices(this IServiceCollection services, string? connectionString)
     {
+#if !DEBUG
+        // Release builds must NOT silently fall back to InMemory.
+        // InMemory loses all data on restart — dangerous for a production Cashier.
+        if (string.IsNullOrEmpty(connectionString))
+        {
+            throw new InvalidOperationException(
+                "Database configuration is missing. " +
+                "GamePort Cashier requires a persistent PostgreSQL connection. " +
+                "Please configure the database connection in appsettings.json " +
+                "under %LocalAppData%\\GamePort\\Cashier\\.");
+        }
+#endif
+
         services.AddDbContext<CashierDbContext>(options =>
         {
             if (!string.IsNullOrEmpty(connectionString))
@@ -20,11 +33,14 @@ public static class InfrastructureServiceRegistration
             }
             else
             {
+                // Development fallback only — guarded above for Release builds
                 options.UseInMemoryDatabase("WingPortDev");
             }
         });
 
         services.AddScoped<IDeviceRepository, DeviceRepository>();
+        services.AddScoped<IZoneRepository, ZoneRepository>();
+        services.AddScoped<IPricingGroupRepository, PricingGroupRepository>();
         services.AddScoped<ICustomerRepository, CustomerRepository>();
         services.AddScoped<ISessionRepository, SessionRepository>();
         services.AddScoped<IGameRepository, GameRepository>();

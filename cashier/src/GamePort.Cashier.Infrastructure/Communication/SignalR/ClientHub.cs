@@ -1,5 +1,6 @@
 using System.Security.Claims;
 using System.Text.Json;
+using GamePort.Cashier.Application.Common;
 using GamePort.Cashier.Application.Interfaces;
 using GamePort.Cashier.Contracts.Hub;
 using GamePort.Cashier.Domain.Enums;
@@ -43,14 +44,13 @@ public class ClientHub : Hub<IClientHubClient>
         _connections.AddOrUpdate(deviceId.Value, Context.ConnectionId);
 
         var device = await _devices.GetByIdAsync(deviceId.Value);
-        if (device is not null)
+        if (device is not null && !device.IsDeleted)
         {
             device.IsConnected = true;
             device.LastHeartbeat = DateTime.UtcNow;
-            if (device.Status == DeviceStatus.Disconnected || device.Status == DeviceStatus.Offline)
-            {
-                device.Status = DeviceStatus.Available;
-            }
+            // Connectivity only: OperationalStatus is never changed by a SignalR connect.
+            // InUse and Maintenance survive reconnects.
+            DeviceStateTransitions.MarkClientConnected(device);
 
             await _devices.UpdateAsync(device);
         }
@@ -69,10 +69,9 @@ public class ClientHub : Hub<IClientHubClient>
             if (device is not null)
             {
                 device.IsConnected = false;
-                if (device.Status != DeviceStatus.Maintenance)
-                {
-                    device.Status = DeviceStatus.Disconnected;
-                }
+                // Connectivity only: OperationalStatus is never changed by a disconnect.
+                // Legacy Status keeps InUse/Maintenance — only Available → Disconnected.
+                DeviceStateTransitions.MarkClientDisconnected(device);
 
                 await _devices.UpdateAsync(device);
             }
@@ -99,6 +98,8 @@ public class ClientHub : Hub<IClientHubClient>
 
         device.IsConnected = true;
         device.LastHeartbeat = DateTime.UtcNow;
+        // A live heartbeat implies connectivity; never touch OperationalStatus.
+        DeviceStateTransitions.MarkClientConnected(device);
         await _devices.UpdateAsync(device);
     }
 

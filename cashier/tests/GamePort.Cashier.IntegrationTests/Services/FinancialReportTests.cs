@@ -83,7 +83,7 @@ public class FinancialReportTests
 
         public async Task<Session> StartSessionAsync(Guid customerId, Guid deviceId)
         {
-            var handler = new StartSessionHandler(Customers, Devices, Sessions, Pricing, new ReservationRepository(Context), AuditLogs, Outbox, UnitOfWork);
+            var handler = new StartSessionHandler(Customers, Devices, new ZoneRepository(Context), Sessions, Pricing, new ReservationRepository(Context), AuditLogs, Outbox, UnitOfWork);
             var result = await handler.HandleAsync(new StartSessionCommand(customerId, deviceId, null, "Cashier"));
             Assert.True(result.IsSuccess);
             return (await Sessions.GetByIdAsync(result.Value!.SessionId))!;

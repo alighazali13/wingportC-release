@@ -25,6 +25,12 @@ public partial class App : System.Windows.Application
     protected override async void OnStartup(StartupEventArgs e)
     {
         base.OnStartup(e);
+
+        // Velopack bootstrap — must run first for update lifecycle handling.
+        // When running from bin/Debug (not a Velopack install), this is a no-op.
+        try { Velopack.VelopackApp.Build().Run(); }
+        catch { /* Velopack not installed (dev mode) — continue normally */ }
+
         var dataDir = LocalPaths.DefaultDataDirectory;
 
         try
@@ -80,6 +86,7 @@ public partial class App : System.Windows.Application
                     services.AddSingleton<INavigationService, NavigationService>(sp =>
                         new NavigationService(type =>
                             (CommunityToolkit.Mvvm.ComponentModel.ObservableObject)sp.GetRequiredService(type)));
+                    services.AddSingleton<GamePort.Cashier.Services.Updates.IAppUpdateService, GamePort.Cashier.Services.Updates.VelopackUpdateService>();
                     services.AddTransient<MainWindowViewModel>();
                     services.AddTransient<DashboardViewModel>();
                     services.AddTransient<DevicesViewModel>();
@@ -97,6 +104,19 @@ public partial class App : System.Windows.Application
 
             var mainWindow = _serviceProvider.GetRequiredService<MainWindow>();
             mainWindow.Show();
+
+            // Background update check — non-blocking, failure-tolerant.
+            // Runs after the UI is visible so startup is never delayed.
+            _ = Task.Run(async () =>
+            {
+                await Task.Delay(TimeSpan.FromSeconds(5));
+                try
+                {
+                    var updateService = _serviceProvider.GetRequiredService<GamePort.Cashier.Services.Updates.IAppUpdateService>();
+                    await updateService.CheckForUpdatesAsync();
+                }
+                catch { /* update failure is non-fatal */ }
+            });
         }
         catch (Exception ex)
         {

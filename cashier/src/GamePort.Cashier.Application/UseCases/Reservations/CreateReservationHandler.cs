@@ -11,6 +11,7 @@ public class CreateReservationHandler
     private readonly IReservationRepository _reservations;
     private readonly ICustomerRepository _customers;
     private readonly IDeviceRepository _devices;
+    private readonly IZoneRepository _zones;
     private readonly ISessionRepository _sessions;
     private readonly IAuditLogRepository _auditLogs;
     private readonly IOutboxRepository _outbox;
@@ -20,6 +21,7 @@ public class CreateReservationHandler
         IReservationRepository reservations,
         ICustomerRepository customers,
         IDeviceRepository devices,
+        IZoneRepository zones,
         ISessionRepository sessions,
         IAuditLogRepository auditLogs,
         IOutboxRepository outbox,
@@ -28,6 +30,7 @@ public class CreateReservationHandler
         _reservations = reservations;
         _customers = customers;
         _devices = devices;
+        _zones = zones;
         _sessions = sessions;
         _auditLogs = auditLogs;
         _outbox = outbox;
@@ -56,6 +59,16 @@ public class CreateReservationHandler
         if (device is null)
         {
             return Result<CreateReservationResult>.Failure("دستگاه یافت نشد.");
+        }
+
+        // Atomic eligibility guard: deleted, inactive, Maintenance and inactive/deleted
+        // Zone ancestors reject new reservations. InUse is allowed — a busy device may
+        // still be reserved for a later time slot.
+        var eligibilityError = await DeviceEligibilityGuard.CheckNewUsageAsync(
+            device, _zones, requireNotInUse: false, cancellationToken);
+        if (eligibilityError is not null)
+        {
+            return Result<CreateReservationResult>.Failure(eligibilityError);
         }
 
         var overlapping = await _reservations.GetOverlappingAsync(device.Id, command.StartTime, command.EndTime);

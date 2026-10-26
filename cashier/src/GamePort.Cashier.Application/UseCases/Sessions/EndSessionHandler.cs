@@ -60,7 +60,9 @@ public class EndSessionHandler
             var device = await _devices.GetByIdAsync(session.DeviceId);
             if (device is not null)
             {
-                device.Status = DeviceStatus.Available;
+                // InUse → Available only. Never reactivates an inactive device and
+                // never changes connectivity; Maintenance is preserved.
+                DeviceStateTransitions.MarkSessionEnd(device);
                 await _devices.UpdateAsync(device);
             }
 

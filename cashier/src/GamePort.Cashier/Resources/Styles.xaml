@@ -47,6 +47,26 @@
     <Color x:Key="SystemRedColor">#FF3B30</Color>
     <Color x:Key="SystemOrangeColor">#FF9500</Color>
 
+    <!-- ===== Dark Theme Colors (Stitch Login) ===== -->
+    <Color x:Key="DarkSurfaceBase">#0B0D10</Color>
+    <Color x:Key="DarkSurfacePrimary">#111419</Color>
+    <Color x:Key="DarkSurfaceSecondary">#161A20</Color>
+    <Color x:Key="DarkSurfaceElevated">#1B2027</Color>
+    <Color x:Key="DarkAccentPrimary">#4C8DFF</Color>
+    <Color x:Key="DarkAccentHover">#67A0FF</Color>
+    <Color x:Key="DarkAccentMuted">#243D5E</Color>
+    <Color x:Key="DarkStatusReady">#00E599</Color>
+    <Color x:Key="DarkStatusReadySubtle">#1A3A2E</Color>
+    <Color x:Key="DarkStatusActive">#4C8DFF</Color>
+    <Color x:Key="DarkStatusError">#EF4444</Color>
+    <Color x:Key="DarkStatusErrorSubtle">#3A1A1A</Color>
+    <Color x:Key="DarkTextPrimary">#FFFFFF</Color>
+    <Color x:Key="DarkTextSecondary">#9CA3AF</Color>
+    <Color x:Key="DarkTextTertiary">#64748B</Color>
+    <Color x:Key="DarkTextDisabled">#374151</Color>
+    <Color x:Key="DarkBorderPrimary">#14181F</Color>
+    <Color x:Key="DarkBorderSecondary">#0F1318</Color>
+
     <!-- ===== Brushes ===== -->
     <SolidColorBrush x:Key="PrimaryBrush" Color="#0058BC"/>
     <SolidColorBrush x:Key="PrimaryContainerBrush" Color="#0070EB"/>
@@ -65,6 +85,25 @@
     <SolidColorBrush x:Key="CardBorderBrush" Color="#4DC1C6D7"/>
     <SolidColorBrush x:Key="CardBackgroundBrush" Color="#FFFFFF"/>
     <SolidColorBrush x:Key="GlassBackgroundBrush" Color="#B3FFFFFF"/>
+
+    <!-- ===== Dark Theme Brushes (Stitch Login) ===== -->
+    <SolidColorBrush x:Key="DarkBaseBrush" Color="#0B0D10"/>
+    <SolidColorBrush x:Key="DarkPrimaryBrush" Color="#111419"/>
+    <SolidColorBrush x:Key="DarkSecondaryBrush" Color="#161A20"/>
+    <SolidColorBrush x:Key="DarkElevatedBrush" Color="#1B2027"/>
+    <SolidColorBrush x:Key="DarkAccentBrush" Color="#4C8DFF"/>
+    <SolidColorBrush x:Key="DarkAccentHoverBrush" Color="#67A0FF"/>
+    <SolidColorBrush x:Key="DarkAccentMutedBrush" Color="#243D5E"/>
+    <SolidColorBrush x:Key="DarkReadyBrush" Color="#00E599"/>
+    <SolidColorBrush x:Key="DarkReadySubtleBrush" Color="#1A3A2E"/>
+    <SolidColorBrush x:Key="DarkErrorBrush" Color="#EF4444"/>
+    <SolidColorBrush x:Key="DarkErrorSubtleBrush" Color="#3A1A1A"/>
+    <SolidColorBrush x:Key="DarkTextPrimaryBrush" Color="#FFFFFF"/>
+    <SolidColorBrush x:Key="DarkTextSecondaryBrush" Color="#9CA3AF"/>
+    <SolidColorBrush x:Key="DarkTextTertiaryBrush" Color="#64748B"/>
+    <SolidColorBrush x:Key="DarkTextDisabledBrush" Color="#374151"/>
+    <SolidColorBrush x:Key="DarkBorderBrush" Color="#14181F"/>
+    <SolidColorBrush x:Key="DarkBorderSecondaryBrush" Color="#0F1318"/>
 
     <!-- ===== Text Styles ===== -->
     <Style x:Key="TextBase" TargetType="TextBlock">

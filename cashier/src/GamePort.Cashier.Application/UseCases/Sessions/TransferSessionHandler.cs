@@ -11,6 +11,7 @@ public class TransferSessionHandler
 {
     private readonly ISessionRepository _sessions;
     private readonly IDeviceRepository _devices;
+    private readonly IZoneRepository _zones;
     private readonly IAuditLogRepository _auditLogs;
     private readonly IOutboxRepository _outbox;
     private readonly IDeviceCommandSender _commandSender;
@@ -19,6 +20,7 @@ public class TransferSessionHandler
     public TransferSessionHandler(
         ISessionRepository sessions,
         IDeviceRepository devices,
+        IZoneRepository zones,
         IAuditLogRepository auditLogs,
         IOutboxRepository outbox,
         IDeviceCommandSender commandSender,
@@ -26,6 +28,7 @@ public class TransferSessionHandler
     {
         _sessions = sessions;
         _devices = devices;
+        _zones = zones;
         _auditLogs = auditLogs;
         _outbox = outbox;
         _commandSender = commandSender;
@@ -56,6 +59,15 @@ public class TransferSessionHandler
             return Result<TransferSessionResult>.Failure("دستگاه مقصد یافت نشد.");
         }
 
+        // Target must be a fully eligible device: active, not Maintenance, not InUse,
+        // and its Zone ancestor chain must be active.
+        var eligibilityError = await DeviceEligibilityGuard.CheckNewUsageAsync(
+            target, _zones, requireNotInUse: true, cancellationToken);
+        if (eligibilityError is not null)
+        {
+            return Result<TransferSessionResult>.Failure(eligibilityError);
+        }
+
         if (target.Status == DeviceStatus.InUse)
         {
             return Result<TransferSessionResult>.Failure("دستگاه مقصد در حال استفاده است.");
@@ -73,11 +85,11 @@ public class TransferSessionHandler
         {
             if (source is not null)
             {
-                source.Status = DeviceStatus.Available;
+                DeviceStateTransitions.MarkSessionEnd(source);
                 await _devices.UpdateAsync(source);
             }
 
-            target.Status = DeviceStatus.InUse;
+            DeviceStateTransitions.MarkSessionStart(target);
             await _devices.UpdateAsync(target);
 
             session.DeviceId = target.Id;

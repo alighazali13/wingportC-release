@@ -31,6 +31,7 @@ public class SessionLifecycleTests
     {
         public CashierDbContext Context { get; }
         public DeviceRepository Devices { get; }
+        public ZoneRepository Zones { get; }
         public CustomerRepository Customers { get; }
         public SessionRepository Sessions { get; }
         public PricingRuleRepository Pricing { get; }
@@ -46,6 +47,7 @@ public class SessionLifecycleTests
         {
             Context = context;
             Devices = new DeviceRepository(context);
+            Zones = new ZoneRepository(context);
             Customers = new CustomerRepository(context);
             Sessions = new SessionRepository(context);
             Pricing = new PricingRuleRepository(context);
@@ -91,7 +93,7 @@ public class SessionLifecycleTests
 
         public async Task<Session> StartSessionAsync(Guid customerId, Guid deviceId, DateTime? plannedEnd = null)
         {
-            var handler = new StartSessionHandler(Customers, Devices, Sessions, Pricing, new ReservationRepository(Context), AuditLogs, Outbox, UnitOfWork);
+            var handler = new StartSessionHandler(Customers, Devices, new ZoneRepository(Context), Sessions, Pricing, new ReservationRepository(Context), AuditLogs, Outbox, UnitOfWork);
             var result = await handler.HandleAsync(new StartSessionCommand(customerId, deviceId, plannedEnd, "Cashier"));
             Assert.True(result.IsSuccess);
             return (await Sessions.GetByIdAsync(result.Value!.SessionId))!;
@@ -159,7 +161,7 @@ public class SessionLifecycleTests
         var session = await fixture.StartSessionAsync(customer.Id, source.Id);
 
         var handler = new TransferSessionHandler(
-            fixture.Sessions, fixture.Devices, fixture.AuditLogs, fixture.Outbox, fixture.CommandSender, fixture.UnitOfWork);
+            fixture.Sessions, fixture.Devices, fixture.Zones, fixture.AuditLogs, fixture.Outbox, fixture.CommandSender, fixture.UnitOfWork);
 
         var result = await handler.HandleAsync(new TransferSessionCommand(session.Id, target.Id, "Cashier"));
 
@@ -188,7 +190,7 @@ public class SessionLifecycleTests
         var session = await fixture.StartSessionAsync(customer.Id, source.Id);
 
         var handler = new TransferSessionHandler(
-            fixture.Sessions, fixture.Devices, fixture.AuditLogs, fixture.Outbox, fixture.CommandSender, fixture.UnitOfWork);
+            fixture.Sessions, fixture.Devices, fixture.Zones, fixture.AuditLogs, fixture.Outbox, fixture.CommandSender, fixture.UnitOfWork);
 
         var result = await handler.HandleAsync(new TransferSessionCommand(session.Id, target.Id, "Cashier"));
 
@@ -207,7 +209,7 @@ public class SessionLifecycleTests
         var session = await fixture.StartSessionAsync(customer.Id, source.Id);
 
         var handler = new TransferSessionHandler(
-            fixture.Sessions, fixture.Devices, fixture.AuditLogs, fixture.Outbox, fixture.CommandSender, fixture.UnitOfWork);
+            fixture.Sessions, fixture.Devices, fixture.Zones, fixture.AuditLogs, fixture.Outbox, fixture.CommandSender, fixture.UnitOfWork);
 
         var result = await handler.HandleAsync(new TransferSessionCommand(session.Id, console.Id, "Cashier"));
 

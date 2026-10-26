@@ -1,4 +1,5 @@
 using System.Text.Json;
+using GamePort.Cashier.Application.Common;
 using GamePort.Cashier.Application.Interfaces;
 using GamePort.Cashier.Application.Services;
 using GamePort.Cashier.Domain.Entities;
@@ -77,7 +78,7 @@ public class ChargeActiveSessionsHandler
             var device = await _devices.GetByIdAsync(session.DeviceId);
             if (device is not null)
             {
-                device.Status = DeviceStatus.Available;
+                DeviceStateTransitions.MarkSessionEnd(device);
                 await _devices.UpdateAsync(device);
             }
 

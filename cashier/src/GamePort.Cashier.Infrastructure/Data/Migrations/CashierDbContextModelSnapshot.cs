@@ -186,6 +186,19 @@ namespace GamePort.Cashier.Infrastructure.Data.Migrations
                         .HasMaxLength(256)
                         .HasColumnType("character varying(256)");
 
+                    b.Property<int>("ConnectionMode")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("ConnectivityStatus")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("ConsoleModel")
+                        .HasMaxLength(20)
+                        .HasColumnType("character varying(20)");
+
+                    b.Property<int?>("ControllerCount")
+                        .HasColumnType("integer");
+
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("timestamp with time zone");
 
@@ -195,13 +208,18 @@ namespace GamePort.Cashier.Infrastructure.Data.Migrations
                     b.Property<Guid?>("CurrentGameId")
                         .HasColumnType("uuid");
 
+                    b.Property<int>("DisplayOrder")
+                        .HasColumnType("integer");
+
                     b.Property<string>("HardwareInfo")
                         .HasColumnType("text");
 
                     b.Property<string>("IpAddress")
-                        .IsRequired()
                         .HasMaxLength(45)
                         .HasColumnType("character varying(45)");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("boolean");
 
                     b.Property<bool>("IsConnected")
                         .HasColumnType("boolean");
@@ -212,14 +230,30 @@ namespace GamePort.Cashier.Infrastructure.Data.Migrations
                     b.Property<DateTime?>("LastHeartbeat")
                         .HasColumnType("timestamp with time zone");
 
+                    b.Property<DateTime?>("LastMaintenanceAt")
+                        .HasColumnType("timestamp with time zone");
+
                     b.Property<string>("MacAddress")
                         .HasMaxLength(32)
                         .HasColumnType("character varying(32)");
+
+                    b.Property<string>("MaintenanceNotes")
+                        .HasMaxLength(500)
+                        .HasColumnType("character varying(500)");
+
+                    b.Property<int?>("MaxPlayers")
+                        .HasColumnType("integer");
 
                     b.Property<string>("Name")
                         .IsRequired()
                         .HasMaxLength(100)
                         .HasColumnType("character varying(100)");
+
+                    b.Property<int>("OperationalStatus")
+                        .HasColumnType("integer");
+
+                    b.Property<Guid?>("PricingGroupId")
+                        .HasColumnType("uuid");
 
                     b.Property<int>("Status")
                         .HasColumnType("integer");
@@ -230,10 +264,25 @@ namespace GamePort.Cashier.Infrastructure.Data.Migrations
                     b.Property<DateTime?>("UpdatedAt")
                         .HasColumnType("timestamp with time zone");
 
+                    b.Property<Guid?>("ZoneId")
+                        .HasColumnType("uuid");
+
+                    b.Property<uint>("xmin")
+                        .IsConcurrencyToken()
+                        .ValueGeneratedOnAddOrUpdate()
+                        .HasColumnType("xid")
+                        .HasColumnName("xmin");
+
                     b.HasKey("Id");
 
                     b.HasIndex("ClientIdentity")
                         .IsUnique();
+
+                    b.HasIndex("IsActive");
+
+                    b.HasIndex("PricingGroupId");
+
+                    b.HasIndex("ZoneId");
 
                     b.ToTable("Devices");
                 });
@@ -542,6 +591,43 @@ namespace GamePort.Cashier.Infrastructure.Data.Migrations
                     b.ToTable("Payments");
                 });
 
+            modelBuilder.Entity("GamePort.Cashier.Domain.Entities.PricingGroup", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("Description")
+                        .HasMaxLength(500)
+                        .HasColumnType("character varying(500)");
+
+                    b.Property<int?>("DeviceType")
+                        .HasColumnType("integer");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("boolean");
+
+                    b.Property<bool>("IsDeleted")
+                        .HasColumnType("boolean");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("IsActive");
+
+                    b.ToTable("PricingGroups");
+                });
+
             modelBuilder.Entity("GamePort.Cashier.Domain.Entities.PricingRule", b =>
                 {
                     b.Property<Guid>("Id")
@@ -572,10 +658,15 @@ namespace GamePort.Cashier.Infrastructure.Data.Migrations
                         .HasPrecision(18, 2)
                         .HasColumnType("numeric(18,2)");
 
+                    b.Property<Guid?>("PricingGroupId")
+                        .HasColumnType("uuid");
+
                     b.Property<DateTime?>("UpdatedAt")
                         .HasColumnType("timestamp with time zone");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("PricingGroupId");
 
                     b.HasIndex("DeviceType", "IsActive");
 
@@ -828,6 +919,46 @@ namespace GamePort.Cashier.Infrastructure.Data.Migrations
                     b.ToTable("WalletTransactions");
                 });
 
+            modelBuilder.Entity("GamePort.Cashier.Domain.Entities.Zone", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<int>("DisplayOrder")
+                        .HasColumnType("integer");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("boolean");
+
+                    b.Property<bool>("IsDeleted")
+                        .HasColumnType("boolean");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)");
+
+                    b.Property<Guid?>("ParentId")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("DisplayOrder");
+
+                    b.HasIndex("IsActive");
+
+                    b.HasIndex("ParentId");
+
+                    b.ToTable("Zones");
+                });
+
             modelBuilder.Entity("GamePort.Cashier.Domain.Entities.AttendanceRecord", b =>
                 {
                     b.HasOne("GamePort.Cashier.Domain.Entities.Employee", "Employee")
@@ -837,6 +968,23 @@ namespace GamePort.Cashier.Infrastructure.Data.Migrations
                         .IsRequired();
 
                     b.Navigation("Employee");
+                });
+
+            modelBuilder.Entity("GamePort.Cashier.Domain.Entities.Device", b =>
+                {
+                    b.HasOne("GamePort.Cashier.Domain.Entities.PricingGroup", "PricingGroup")
+                        .WithMany()
+                        .HasForeignKey("PricingGroupId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.HasOne("GamePort.Cashier.Domain.Entities.Zone", "Zone")
+                        .WithMany()
+                        .HasForeignKey("ZoneId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.Navigation("PricingGroup");
+
+                    b.Navigation("Zone");
                 });
 
             modelBuilder.Entity("GamePort.Cashier.Domain.Entities.DeviceGame", b =>
@@ -856,6 +1004,16 @@ namespace GamePort.Cashier.Infrastructure.Data.Migrations
                     b.Navigation("Device");
 
                     b.Navigation("Game");
+                });
+
+            modelBuilder.Entity("GamePort.Cashier.Domain.Entities.PricingRule", b =>
+                {
+                    b.HasOne("GamePort.Cashier.Domain.Entities.PricingGroup", "PricingGroup")
+                        .WithMany()
+                        .HasForeignKey("PricingGroupId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.Navigation("PricingGroup");
                 });
 
             modelBuilder.Entity("GamePort.Cashier.Domain.Entities.Reservation", b =>
@@ -916,6 +1074,16 @@ namespace GamePort.Cashier.Infrastructure.Data.Migrations
                         .IsRequired();
 
                     b.Navigation("Wallet");
+                });
+
+            modelBuilder.Entity("GamePort.Cashier.Domain.Entities.Zone", b =>
+                {
+                    b.HasOne("GamePort.Cashier.Domain.Entities.Zone", "Parent")
+                        .WithMany()
+                        .HasForeignKey("ParentId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.Navigation("Parent");
                 });
 
             modelBuilder.Entity("GamePort.Cashier.Domain.Entities.Customer", b =>

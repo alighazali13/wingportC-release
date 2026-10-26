@@ -26,6 +26,10 @@ public static class ApplicationServiceRegistration
         services.AddScoped<SessionBillingService>();
 
         services.AddScoped<RegisterDeviceHandler>();
+        services.AddScoped<UpdateDeviceHandler>();
+        services.AddScoped<SetDeviceActivationHandler>();
+        services.AddScoped<SetDeviceOperationalStatusHandler>();
+        services.AddScoped<DeleteDeviceHandler>();
         services.AddScoped<RegisterCustomerHandler>();
 
         services.AddScoped<StartSessionHandler>();

@@ -16,7 +16,10 @@ public class MigrationChainTests
         "20260916144126_AddReservations",
         "20260916163003_AddGames",
         "20260916170826_AddEmployeesAndAttendance",
-        "20260916171320_AddOutboxNextAttempt"
+        "20260916171320_AddOutboxNextAttempt",
+        "20261010191117_AddDeviceV2",
+        "20261010231654_AddDeviceXminConcurrency",
+        "20261012130439_AddPricingGroupDeviceType"
     ];
 
     [Fact]

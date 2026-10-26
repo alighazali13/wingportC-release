@@ -68,11 +68,11 @@ public class ReservationTests
         }
 
         public CreateReservationHandler CreateHandler() =>
-            new(Reservations, Customers, Devices, Sessions, AuditLogs, Outbox, UnitOfWork);
+            new(Reservations, Customers, Devices, new ZoneRepository(Context), Sessions, AuditLogs, Outbox, UnitOfWork);
 
         public ArriveReservationHandler ArriveHandler() =>
             new(Reservations,
-                new StartSessionHandler(Customers, Devices, Sessions, Pricing, Reservations, AuditLogs, Outbox, UnitOfWork),
+                new StartSessionHandler(Customers, Devices, new ZoneRepository(Context), Sessions, Pricing, Reservations, AuditLogs, Outbox, UnitOfWork),
                 AuditLogs, Outbox, UnitOfWork);
 
         public ValueTask DisposeAsync() => Context.DisposeAsync();

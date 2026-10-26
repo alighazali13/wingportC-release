@@ -10,6 +10,8 @@ public class CashierDbContext : DbContext
     }
 
     public DbSet<Device> Devices => Set<Device>();
+    public DbSet<Zone> Zones => Set<Zone>();
+    public DbSet<PricingGroup> PricingGroups => Set<PricingGroup>();
     public DbSet<Customer> Customers => Set<Customer>();
     public DbSet<Session> Sessions => Set<Session>();
     public DbSet<Wallet> Wallets => Set<Wallet>();
@@ -38,7 +40,50 @@ public class CashierDbContext : DbContext
             entity.Property(e => e.MacAddress).HasMaxLength(32);
             entity.Property(e => e.ClientIdentity).HasMaxLength(64);
             entity.Property(e => e.ClientSecretHash).HasMaxLength(256);
+            entity.Property(e => e.MaintenanceNotes).HasMaxLength(500);
+            entity.Property(e => e.ConsoleModel).HasMaxLength(20);
             entity.HasIndex(e => e.ClientIdentity).IsUnique();
+            entity.HasIndex(e => e.ZoneId);
+            entity.HasIndex(e => e.PricingGroupId);
+            entity.HasIndex(e => e.IsActive);
+
+            // Safe FK delete: Restrict — do not cascade-delete devices via zone/pricing group
+            entity.HasOne(e => e.Zone)
+                .WithMany()
+                .HasForeignKey(e => e.ZoneId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            entity.HasOne(e => e.PricingGroup)
+                .WithMany()
+                .HasForeignKey(e => e.PricingGroupId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            // PostgreSQL xmin system column for optimistic concurrency.
+            // Npgsql maps uint xmin + IsRowVersion() to the system column — no DDL migration needed.
+            entity.Property(e => e.xmin).IsRowVersion();
+        });
+
+        modelBuilder.Entity<Zone>(entity =>
+        {
+            entity.HasKey(e => e.Id);
+            entity.Property(e => e.Name).HasMaxLength(100).IsRequired();
+            entity.HasIndex(e => e.IsActive);
+            entity.HasIndex(e => e.DisplayOrder);
+
+            // Self-referencing parent — Restrict to prevent cascade deletion of child zones
+            entity.HasOne(e => e.Parent)
+                .WithMany()
+                .HasForeignKey(e => e.ParentId)
+                .OnDelete(DeleteBehavior.Restrict);
+        });
+
+        modelBuilder.Entity<PricingGroup>(entity =>
+        {
+            entity.HasKey(e => e.Id);
+            entity.Property(e => e.Name).HasMaxLength(100).IsRequired();
+            entity.Property(e => e.Description).HasMaxLength(500);
+            entity.Property(e => e.DeviceType).HasConversion<int>();
+            entity.HasIndex(e => e.IsActive);
         });
 
         modelBuilder.Entity<Customer>(entity =>
@@ -157,6 +202,12 @@ public class CashierDbContext : DbContext
             entity.Property(e => e.Name).HasMaxLength(100).IsRequired();
             entity.Property(e => e.PricePerHour).HasPrecision(18, 2);
             entity.HasIndex(e => new { e.DeviceType, e.IsActive });
+            entity.HasIndex(e => e.PricingGroupId);
+
+            entity.HasOne(e => e.PricingGroup)
+                .WithMany()
+                .HasForeignKey(e => e.PricingGroupId)
+                .OnDelete(DeleteBehavior.Restrict);
         });
 
         modelBuilder.Entity<OutboxEvent>(entity =>

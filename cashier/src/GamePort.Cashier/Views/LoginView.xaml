@@ -2,50 +2,780 @@
              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              FlowDirection="RightToLeft" FontFamily="Vazirmatn"
-             Background="#F4F6FA">
+             Background="#0B0D10"
+             SizeChanged="UserControl_SizeChanged">
 
-    <Grid Margin="0" VerticalAlignment="Center" HorizontalAlignment="Center">
-        <Border Width="400" Padding="32" Background="White" CornerRadius="12">
-            <Grid>
-                <Grid.RowDefinitions>
-                    <RowDefinition Height="Auto"/>
-                    <RowDefinition Height="Auto"/>
-                    <RowDefinition Height="Auto"/>
-                    <RowDefinition Height="Auto"/>
-                    <RowDefinition Height="Auto"/>
-                    <RowDefinition Height="Auto"/>
-                    <RowDefinition Height="Auto"/>
-                </Grid.RowDefinitions>
+    <UserControl.Resources>
+        <!-- ========== FIELD LABEL ========== -->
+        <Style x:Key="FieldLabel" TargetType="TextBlock">
+            <Setter Property="FontFamily" Value="{StaticResource Vazirmatn}"/>
+            <Setter Property="FontSize" Value="12"/>
+            <Setter Property="FontWeight" Value="Medium"/>
+            <Setter Property="Foreground" Value="{StaticResource DarkTextPrimaryBrush}"/>
+            <Setter Property="VerticalAlignment" Value="Center"/>
+        </Style>
 
-                <TextBlock Grid.Row="0" Text="وینگ‌پورت" FontSize="22" FontWeight="Bold"
-                           Foreground="#0058BC" HorizontalAlignment="Center" Margin="0,0,0,8"/>
+        <!-- ========== FIELD HINT (Tab, F2) ========== -->
+        <Style x:Key="FieldHint" TargetType="TextBlock">
+            <Setter Property="FontFamily" Value="JetBrains Mono"/>
+            <Setter Property="FontSize" Value="10"/>
+            <Setter Property="Foreground" Value="{StaticResource DarkTextTertiaryBrush}"/>
+            <Setter Property="VerticalAlignment" Value="Center"/>
+        </Style>
 
-                <TextBlock Grid.Row="1" Text="ورود به سیستم" FontSize="13"
-                           Foreground="#888" HorizontalAlignment="Center" Margin="0,0,0,20"/>
+        <!-- ========== TECH TEXT ========== -->
+        <Style x:Key="TechText" TargetType="TextBlock">
+            <Setter Property="FontFamily" Value="JetBrains Mono"/>
+            <Setter Property="FontSize" Value="10"/>
+            <Setter Property="Foreground" Value="{StaticResource DarkTextTertiaryBrush}"/>
+            <Setter Property="VerticalAlignment" Value="Center"/>
+        </Style>
 
-                <TextBlock Grid.Row="2" Text="نام کاربری" FontSize="12" Foreground="#333" Margin="0,0,0,4"/>
-                <TextBox Grid.Row="3" x:Name="UsernameBox"
-                         Height="40" FontSize="14" VerticalContentAlignment="Center"
-                         FlowDirection="LeftToRight" BorderBrush="#DDD" BorderThickness="1" Padding="10,0"/>
+        <!-- ========== INPUT TEXTBOX ========== -->
+        <Style x:Key="GamePortTextBox" TargetType="TextBox">
+            <Setter Property="Background" Value="{StaticResource DarkSecondaryBrush}"/>
+            <Setter Property="Foreground" Value="{StaticResource DarkTextPrimaryBrush}"/>
+            <Setter Property="BorderBrush" Value="#14181F"/>
+            <Setter Property="BorderThickness" Value="1"/>
+            <Setter Property="CaretBrush" Value="{StaticResource DarkTextPrimaryBrush}"/>
+            <Setter Property="SelectionBrush" Value="#4C8DFF40"/>
+            <Setter Property="FontFamily" Value="{StaticResource Vazirmatn}"/>
+            <Setter Property="FontSize" Value="14"/>
+            <Setter Property="Padding" Value="0"/>
+            <Setter Property="Height" Value="42"/>
+            <Setter Property="VerticalContentAlignment" Value="Center"/>
+            <Setter Property="HorizontalContentAlignment" Value="Right"/>
+            <Setter Property="FlowDirection" Value="RightToLeft"/>
+            <Setter Property="TextOptions.TextFormattingMode" Value="Display"/>
+            <Setter Property="BorderThickness" Value="0"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="TextBox">
+                        <ScrollViewer x:Name="PART_ContentHost"
+                                      Margin="{TemplateBinding Padding}"
+                                      VerticalAlignment="Center"
+                                      HorizontalAlignment="Stretch"
+                                      VerticalContentAlignment="Center"/>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
 
-                <TextBlock Grid.Row="4" Text="رمز عبور" FontSize="12" Foreground="#333" Margin="0,12,0,4"/>
-                <PasswordBox Grid.Row="5" x:Name="PasswordBox" PasswordChanged="PasswordBox_PasswordChanged"
-                             Height="40" FontSize="14" VerticalContentAlignment="Center"
-                             FlowDirection="LeftToRight" BorderBrush="#DDD" BorderThickness="1"
-                             Padding="10,0" KeyDown="PasswordBox_KeyDown"/>
+        <!-- ========== INPUT PASSWORDBOX ========== -->
+        <Style x:Key="GamePortPasswordBox" TargetType="PasswordBox">
+            <Setter Property="Background" Value="Transparent"/>
+            <Setter Property="Foreground" Value="{StaticResource DarkTextPrimaryBrush}"/>
+            <Setter Property="CaretBrush" Value="{StaticResource DarkTextPrimaryBrush}"/>
+            <Setter Property="SelectionBrush" Value="#4C8DFF40"/>
+            <Setter Property="FontFamily" Value="JetBrains Mono"/>
+            <Setter Property="FontSize" Value="14"/>
+            <Setter Property="Padding" Value="0"/>
+            <Setter Property="Height" Value="42"/>
+            <Setter Property="VerticalContentAlignment" Value="Center"/>
+            <Setter Property="HorizontalContentAlignment" Value="Right"/>
+            <Setter Property="FlowDirection" Value="RightToLeft"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="PasswordBox">
+                        <ScrollViewer x:Name="PART_ContentHost"
+                                      Margin="{TemplateBinding Padding}"
+                                      VerticalAlignment="Center"
+                                      HorizontalAlignment="Stretch"
+                                      VerticalContentAlignment="Center"/>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
 
-                <StackPanel Grid.Row="6" Margin="0,20,0,0">
-                    <Button x:Name="LoginButton" Content="ورود" FontSize="14"
-                            Height="44" Cursor="Hand" Click="LoginButton_Click"
-                            Background="#0058BC" Foreground="White"/>
+        <!-- ========== REVEAL TEXTBOX (password visible) ========== -->
+        <Style x:Key="GamePortRevealBox" TargetType="TextBox">
+            <Setter Property="Background" Value="Transparent"/>
+            <Setter Property="Foreground" Value="{StaticResource DarkTextPrimaryBrush}"/>
+            <Setter Property="CaretBrush" Value="{StaticResource DarkTextPrimaryBrush}"/>
+            <Setter Property="SelectionBrush" Value="#4C8DFF40"/>
+            <Setter Property="FontFamily" Value="JetBrains Mono"/>
+            <Setter Property="FontSize" Value="14"/>
+            <Setter Property="Padding" Value="0"/>
+            <Setter Property="Height" Value="42"/>
+            <Setter Property="VerticalContentAlignment" Value="Center"/>
+            <Setter Property="HorizontalContentAlignment" Value="Right"/>
+            <Setter Property="FlowDirection" Value="RightToLeft"/>
+            <Setter Property="IsReadOnly" Value="True"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="TextBox">
+                        <ScrollViewer x:Name="PART_ContentHost"
+                                      Margin="{TemplateBinding Padding}"
+                                      VerticalAlignment="Center"
+                                      HorizontalAlignment="Stretch"
+                                      VerticalContentAlignment="Center"/>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
 
-                    <Border x:Name="StatusBorder" Visibility="Collapsed" Margin="0,12,0,0"
-                            Background="#E3F2FD" Padding="12,8" CornerRadius="6">
-                        <TextBlock x:Name="StatusText" Text="" FontSize="12" Foreground="#1565C0"
-                                   TextWrapping="Wrap" TextAlignment="Center"/>
+        <!-- ========== INPUT BORDER (wraps all inputs) ========== -->
+        <Style x:Key="InputBorder" TargetType="Border">
+            <Setter Property="Background" Value="{StaticResource DarkSecondaryBrush}"/>
+            <Setter Property="BorderBrush" Value="#14181F"/>
+            <Setter Property="BorderThickness" Value="1"/>
+            <Setter Property="CornerRadius" Value="6"/>
+            <Setter Property="Height" Value="44"/>
+            <Setter Property="Padding" Value="0"/>
+        </Style>
+
+        <!-- ========== PRIMARY BUTTON ========== -->
+        <Style x:Key="GamePortPrimaryButton" TargetType="Button">
+            <Setter Property="Background" Value="{StaticResource DarkAccentBrush}"/>
+            <Setter Property="Foreground" Value="White"/>
+            <Setter Property="FontFamily" Value="{StaticResource Vazirmatn}"/>
+            <Setter Property="FontSize" Value="14"/>
+            <Setter Property="FontWeight" Value="SemiBold"/>
+            <Setter Property="Cursor" Value="Hand"/>
+            <Setter Property="Height" Value="44"/>
+            <Setter Property="BorderThickness" Value="0"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Border x:Name="Bd" Background="{TemplateBinding Background}"
+                                CornerRadius="6" SnapsToDevicePixels="True">
+                            <ContentPresenter HorizontalAlignment="Center"
+                                              VerticalAlignment="Center"/>
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="Bd" Property="Background" Value="{StaticResource DarkAccentHoverBrush}"/>
+                            </Trigger>
+                            <Trigger Property="IsPressed" Value="True">
+                                <Setter TargetName="Bd" Property="Background" Value="#3D7AE6"/>
+                            </Trigger>
+                            <Trigger Property="IsEnabled" Value="False">
+                                <Setter TargetName="Bd" Property="Opacity" Value="0.5"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <!-- ========== EYE TOGGLE ========== -->
+        <Style x:Key="EyeToggleButton" TargetType="ToggleButton">
+            <Setter Property="Background" Value="Transparent"/>
+            <Setter Property="BorderThickness" Value="0"/>
+            <Setter Property="Cursor" Value="Hand"/>
+            <Setter Property="Width" Value="36"/>
+            <Setter Property="Height" Value="36"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="ToggleButton">
+                        <Border x:Name="Bd" Background="{TemplateBinding Background}"
+                                CornerRadius="6">
+                            <ContentPresenter HorizontalAlignment="Center"
+                                              VerticalAlignment="Center"/>
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="Bd" Property="Background" Value="#1B2027"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <!-- ========== STATUS BADGE ========== -->
+        <Style x:Key="StatusBadge" TargetType="Border">
+            <Setter Property="Background" Value="{StaticResource DarkReadySubtleBrush}"/>
+            <Setter Property="BorderBrush" Value="#1A3A2E"/>
+            <Setter Property="BorderThickness" Value="1"/>
+            <Setter Property="CornerRadius" Value="4"/>
+            <Setter Property="Padding" Value="6,2"/>
+        </Style>
+
+        <!-- ========== STATUS CARD ========== -->
+        <Style x:Key="StatusCard" TargetType="Border">
+            <Setter Property="Background" Value="{StaticResource DarkSecondaryBrush}"/>
+            <Setter Property="BorderBrush" Value="#14181F"/>
+            <Setter Property="BorderThickness" Value="1"/>
+            <Setter Property="CornerRadius" Value="8"/>
+            <Setter Property="Padding" Value="12"/>
+        </Style>
+
+        <!-- ========== SUB ROW ========== -->
+        <Style x:Key="SubRow" TargetType="Border">
+            <Setter Property="Background" Value="{StaticResource DarkElevatedBrush}"/>
+            <Setter Property="BorderBrush" Value="#0F1318"/>
+            <Setter Property="BorderThickness" Value="1"/>
+            <Setter Property="CornerRadius" Value="5"/>
+            <Setter Property="Padding" Value="8,6"/>
+        </Style>
+    </UserControl.Resources>
+
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+        </Grid.RowDefinitions>
+
+        <!-- ===== TOP CHROME BAR ===== -->
+        <Border Grid.Row="0" Background="#0B0D10" BorderBrush="#14181F"
+                BorderThickness="0,0,0,1" Padding="12,0">
+            <Grid Height="36" FlowDirection="LeftToRight">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="Auto"/>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="Auto"/>
+                </Grid.ColumnDefinitions>
+                <StackPanel Grid.Column="0" Orientation="Horizontal" VerticalAlignment="Center">
+                    <Border Width="20" Height="20" CornerRadius="5" Background="#161A20"
+                            BorderBrush="#243D5E" BorderThickness="1" Margin="0,0,8,0">
+                        <Grid>
+                            <Path Data="M28,36C28,31.58 31.58,28 36,28H84C88.42,28 92,31.58 92,36V84C92,88.42 88.42,92 84,92H36C31.58,92 28,88.42 28,84V36Z"
+                                  Fill="#161A20" Stroke="#243D5E" StrokeThickness="1.5" Stretch="Uniform"/>
+                            <Path Data="M42,46 H78 V56 H54 V64 H72 V74 H42 V46 Z"
+                                  Fill="{StaticResource DarkAccentBrush}" Stretch="Uniform"
+                                  HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                        </Grid>
+                    </Border>
+                    <TextBlock Text="GamePort Cashier — صندوق مرکزی شماره ۱" FontSize="12"
+                               FontWeight="SemiBold" Foreground="#FFFFFF" VerticalAlignment="Center"
+                               FlowDirection="RightToLeft" TextTrimming="CharacterEllipsis" MaxWidth="280"/>
+                    <Border Background="#161A20" CornerRadius="4" BorderBrush="#14181F"
+                            BorderThickness="1" Padding="8,2" Margin="8,0,0,0">
+                        <TextBlock Text="POS-01" FontFamily="JetBrains Mono" FontSize="10"
+                                   Foreground="{StaticResource DarkTextSecondaryBrush}"
+                                   FlowDirection="LeftToRight"/>
+                    </Border>
+                    <Border Width="1" Height="14" Background="#14181F" Margin="10,0"/>
+                    <Ellipse Width="8" Height="8" Fill="{StaticResource DarkReadyBrush}"
+                             VerticalAlignment="Center" Margin="0,0,4,0"/>
+                    <TextBlock Text="SERVER: LOCAL" FontFamily="JetBrains Mono" FontSize="11"
+                               Foreground="{StaticResource DarkTextSecondaryBrush}"
+                               VerticalAlignment="Center" FlowDirection="LeftToRight"/>
+                </StackPanel>
+                <StackPanel Grid.Column="1" Orientation="Horizontal" HorizontalAlignment="Center"
+                            VerticalAlignment="Center">
+                    <Border Background="#111419" CornerRadius="4" BorderBrush="#14181F"
+                            BorderThickness="1" Padding="10,3">
+                        <StackPanel Orientation="Horizontal">
+                            <TextBlock x:Name="ClockText" Text="00:00:00" FontFamily="JetBrains Mono"
+                                       FontSize="11" Foreground="{StaticResource DarkTextPrimaryBrush}"
+                                       VerticalAlignment="Center" FlowDirection="LeftToRight"/>
+                        </StackPanel>
+                    </Border>
+                </StackPanel>
+                <StackPanel Grid.Column="2" VerticalAlignment="Center"/>
+            </Grid>
+        </Border>
+
+        <!-- ===== SUB-BAR ===== -->
+        <Border Grid.Row="1" Background="{StaticResource DarkPrimaryBrush}"
+                BorderBrush="#14181F" BorderThickness="0,0,0,1" Padding="16,0">
+            <Grid Height="30">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="Auto"/>
+                </Grid.ColumnDefinitions>
+                <!-- Col0 (right in RTL): LAN + shift -->
+                <StackPanel Grid.Column="0" Orientation="Horizontal" VerticalAlignment="Center">
+                    <Border Background="{StaticResource DarkElevatedBrush}" CornerRadius="4"
+                            BorderBrush="#14181F" BorderThickness="1" Padding="8,2">
+                        <StackPanel Orientation="Horizontal">
+                            <Ellipse Width="6" Height="6" Fill="{StaticResource DarkAccentBrush}"
+                                     VerticalAlignment="Center" Margin="0,0,4,0"/>
+                            <TextBlock Text="LAN: 192.168.1.100" FontFamily="JetBrains Mono"
+                                       FontSize="11" Foreground="{StaticResource DarkTextPrimaryBrush}"
+                                       VerticalAlignment="Center" FlowDirection="LeftToRight"/>
+                        </StackPanel>
+                    </Border>
+                    <TextBlock Text="  |  " FontFamily="JetBrains Mono" FontSize="11"
+                               Foreground="{StaticResource DarkTextTertiaryBrush}" VerticalAlignment="Center"
+                               FlowDirection="LeftToRight"/>
+                    <TextBlock Text="شیفت صبحگاهی" FontSize="12"
+                               Foreground="{StaticResource DarkTextSecondaryBrush}" VerticalAlignment="Center"
+                               TextTrimming="CharacterEllipsis" MaxWidth="140"/>
+                </StackPanel>
+                <!-- Col1 (left in RTL): PROTO + ZERO-DOWNTIME -->
+                <StackPanel Grid.Column="1" Orientation="Horizontal" HorizontalAlignment="Right"
+                            VerticalAlignment="Center">
+                    <TextBlock Text="PROTO: GAMEPORT-LAN-v2.4" FontFamily="JetBrains Mono"
+                               FontSize="11" Foreground="{StaticResource DarkTextSecondaryBrush}"
+                               VerticalAlignment="Center" FlowDirection="LeftToRight"
+                               TextTrimming="CharacterEllipsis" MaxWidth="200"/>
+                    <Border Background="{StaticResource DarkReadySubtleBrush}" CornerRadius="4"
+                            BorderBrush="#1A3A2E" BorderThickness="1" Padding="8,2" Margin="8,0,0,0">
+                        <TextBlock Text="ZERO-DOWNTIME READY" FontFamily="JetBrains Mono"
+                                   FontSize="10" FontWeight="Bold"
+                                   Foreground="{StaticResource DarkReadyBrush}"
+                                   VerticalAlignment="Center" FlowDirection="LeftToRight"/>
                     </Border>
                 </StackPanel>
             </Grid>
         </Border>
+
+        <!-- ===== MAIN WORKSPACE ===== -->
+        <Grid Grid.Row="2" FlowDirection="LeftToRight">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition x:Name="VisualCol" Width="*"/>
+                <ColumnDefinition x:Name="AuthCol" Width="Auto" MinWidth="400" MaxWidth="520"/>
+            </Grid.ColumnDefinitions>
+
+            <!-- LEFT: Visual Area -->
+            <Border Grid.Column="0" x:Name="VisualPanel" Padding="28">
+                <Border.Background>
+                    <RadialGradientBrush Center="0.5,0.5" GradientOrigin="0.5,0.5"
+                                          RadiusX="0.6" RadiusY="0.6">
+                        <GradientStop Color="#0A1628" Offset="0"/>
+                        <GradientStop Color="#0B0D10" Offset="1"/>
+                    </RadialGradientBrush>
+                </Border.Background>
+                <Grid>
+                    <StackPanel Orientation="Horizontal" VerticalAlignment="Top"
+                                HorizontalAlignment="Left" x:Name="MicroBranding">
+                        <Ellipse Width="8" Height="8" Fill="{StaticResource DarkAccentBrush}"
+                                 Margin="0,0,8,0" VerticalAlignment="Center"/>
+                        <TextBlock Text="GAMEPORT // GAMING CENTER" FontFamily="JetBrains Mono"
+                                   FontSize="11" Foreground="{StaticResource DarkTextTertiaryBrush}"
+                                   VerticalAlignment="Center" FlowDirection="LeftToRight"/>
+                    </StackPanel>
+                    <TextBlock Text="TERMINAL ID: POS-01" FontFamily="JetBrains Mono"
+                               FontSize="10" Foreground="{StaticResource DarkTextTertiaryBrush}"
+                               HorizontalAlignment="Right" VerticalAlignment="Top"
+                               Opacity="0.6" FlowDirection="LeftToRight" x:Name="TerminalIdText"/>
+
+                    <Border x:Name="HeroVisual"
+                            HorizontalAlignment="Center" VerticalAlignment="Center"
+                            MinWidth="260" MinHeight="160" MaxWidth="500" MaxHeight="340"
+                            CornerRadius="16" Background="#0A1628"
+                            BorderBrush="#14181F" BorderThickness="1" Margin="0,-16,0,0">
+                        <Border.Effect>
+                            <DropShadowEffect Color="#4C8DFF" BlurRadius="60" ShadowDepth="0" Opacity="0.12"/>
+                        </Border.Effect>
+                        <Grid>
+                            <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center">
+                                <Path Data="M28,36C28,31.58 31.58,28 36,28H84C88.42,28 92,31.58 92,36V84C92,88.42 88.42,92 84,92H36C31.58,92 28,88.42 28,84V36Z"
+                                      Fill="#1B2027" Stroke="#243D5E"
+                                      StrokeThickness="1.5" Stretch="Uniform" Width="90" Height="90" Opacity="0.8"/>
+                                <Path Data="M42,46 H78 V56 H54 V64 H72 V74 H42 V46 Z"
+                                      Fill="#4C8DFF" Stretch="Uniform"
+                                      Width="36" Height="36" HorizontalAlignment="Center" Margin="0,-30,0,0"/>
+                                <Ellipse Width="12" Height="12" Fill="#00E599"
+                                         HorizontalAlignment="Center" Margin="0,-4,0,0"/>
+                                <TextBlock Text="GamePort Station" FontSize="12"
+                                           Foreground="#64748B"
+                                           HorizontalAlignment="Center" Margin="0,12,0,0"/>
+                            </StackPanel>
+                        </Grid>
+                    </Border>
+
+                    <Border x:Name="LiveStatusBar"
+                            HorizontalAlignment="Stretch" VerticalAlignment="Bottom"
+                            Background="{StaticResource DarkPrimaryBrush}"
+                            BorderBrush="#14181F" BorderThickness="1"
+                            CornerRadius="8" Padding="14,10">
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="Auto"/>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="Auto"/>
+                            </Grid.ColumnDefinitions>
+                            <StackPanel Grid.Column="0" Orientation="Horizontal" VerticalAlignment="Center">
+                                <Ellipse Width="10" Height="10" Fill="{StaticResource DarkReadyBrush}"
+                                         Margin="0,0,8,0" VerticalAlignment="Center"/>
+                                <TextBlock Text="وضعیت زنده سالن:" FontSize="12" FontWeight="Medium"
+                                           Foreground="{StaticResource DarkTextPrimaryBrush}" VerticalAlignment="Center"/>
+                                <TextBlock FontSize="12" Foreground="{StaticResource DarkTextSecondaryBrush}"
+                                           VerticalAlignment="Center" Margin="4,0,0,0">
+                                    <Run Text="۲۴" FontFamily="JetBrains Mono" FontWeight="Bold" Foreground="{StaticResource DarkTextPrimaryBrush}"/>
+                                    <Run Text=" سیستم فعال"/>
+                                    <Run Text="  |  " Foreground="{StaticResource DarkTextTertiaryBrush}"/>
+                                    <Run Text="۶" FontFamily="JetBrains Mono" FontWeight="Bold" Foreground="{StaticResource DarkReadyBrush}"/>
+                                    <Run Text=" سیستم آزاد"/>
+                                </TextBlock>
+                            </StackPanel>
+                            <StackPanel Grid.Column="2" Orientation="Horizontal" VerticalAlignment="Center">
+                                <TextBlock FontFamily="JetBrains Mono" FontSize="11" Foreground="{StaticResource DarkTextTertiaryBrush}" VerticalAlignment="Center" FlowDirection="LeftToRight">
+                                    <Run Text="SERVER LOAD: "/><Run Text="3.2%" Foreground="{StaticResource DarkTextSecondaryBrush}" FontWeight="SemiBold"/>
+                                </TextBlock>
+                                <TextBlock Text="   " FontFamily="JetBrains Mono" FontSize="11" VerticalAlignment="Center"/>
+                                <TextBlock Text="RELAY: OK" FontFamily="JetBrains Mono" FontSize="11" Foreground="{StaticResource DarkReadyBrush}" FontWeight="SemiBold" VerticalAlignment="Center" FlowDirection="LeftToRight"/>
+                            </StackPanel>
+                        </Grid>
+                    </Border>
+                </Grid>
+            </Border>
+
+            <!-- RIGHT: Authentication Panel -->
+            <Border Grid.Column="1" x:Name="AuthPanel"
+                    FlowDirection="RightToLeft"
+                    Background="{StaticResource DarkPrimaryBrush}"
+                    BorderBrush="#14181F" BorderThickness="1,0,0,0" Padding="28,20">
+                <Grid>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="*"/>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="Auto"/>
+                    </Grid.RowDefinitions>
+
+                    <!-- ROW 0: Brand -->
+                    <StackPanel Grid.Row="0" Orientation="Horizontal" Margin="0,0,0,16">
+                        <Border Width="42" Height="42" CornerRadius="10"
+                                Background="{StaticResource DarkElevatedBrush}"
+                                BorderBrush="#14181F" BorderThickness="1" Padding="6" Margin="0,0,12,0">
+                            <Grid>
+                                <Path Data="M28,36C28,31.58 31.58,28 36,28H84C88.42,28 92,31.58 92,36V84C92,88.42 88.42,92 84,92H36C31.58,92 28,88.42 28,84V36Z"
+                                      Fill="{StaticResource DarkSecondaryBrush}" Stroke="#243D5E" StrokeThickness="1.5" Stretch="Uniform"/>
+                                <Path Data="M42,46 H78 V56 H54 V64 H72 V74 H42 V46 Z"
+                                      Fill="{StaticResource DarkAccentBrush}" Stretch="Uniform"
+                                      HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                            </Grid>
+                        </Border>
+                        <StackPanel VerticalAlignment="Center">
+                            <TextBlock Text="گیم‌پورت" FontSize="18" FontWeight="Bold"
+                                       Foreground="{StaticResource DarkTextPrimaryBrush}"/>
+                            <TextBlock Text="GAMEPORT CASHIER CLIENT" FontFamily="JetBrains Mono"
+                                       FontSize="10" Foreground="{StaticResource DarkTextTertiaryBrush}"
+                                       FlowDirection="LeftToRight"/>
+                        </StackPanel>
+                    </StackPanel>
+
+                    <!-- ROW 1: Auth Header -->
+                    <StackPanel Grid.Row="1" Margin="0,0,0,4">
+                        <TextBlock Text="ورود به صندوق" FontSize="20" FontWeight="ExtraBold"
+                                   Foreground="{StaticResource DarkTextPrimaryBrush}"/>
+                        <TextBlock Text="برای شروع شیفت کاری و کنترل ایستگاه‌ها مشخصات خود را وارد نمایید."
+                                   FontSize="12" Foreground="{StaticResource DarkTextSecondaryBrush}"
+                                   Margin="0,4,0,0" TextWrapping="Wrap"/>
+                    </StackPanel>
+                    <Border Grid.Row="1" BorderBrush="#14181F" BorderThickness="0,0,0,1"
+                            VerticalAlignment="Bottom" Margin="0,0,0,0"/>
+
+                    <!-- ROW 2: Error Alert -->
+                    <Border x:Name="ErrorAlert" Grid.Row="2" Visibility="Collapsed"
+                            Background="{StaticResource DarkErrorSubtleBrush}"
+                            BorderBrush="#EF4444" BorderThickness="1"
+                            CornerRadius="6" Padding="12,8" Margin="0,10,0,0">
+                        <StackPanel Orientation="Horizontal">
+                            <TextBlock Text="&#xE000;" FontFamily="{StaticResource MaterialIcons}"
+                                       FontSize="16" Foreground="{StaticResource DarkErrorBrush}"
+                                       VerticalAlignment="Center" Margin="0,0,8,0"/>
+                            <TextBlock x:Name="ErrorText" Text="" FontSize="12"
+                                       Foreground="{StaticResource DarkErrorBrush}"
+                                       VerticalAlignment="Center" TextWrapping="Wrap"/>
+                        </StackPanel>
+                    </Border>
+
+                    <!-- ROW 3: Form + flexible spacer -->
+                    <StackPanel Grid.Row="3" Margin="0,12,0,0">
+
+                        <!-- ===== USERNAME FIELD ===== -->
+                        <Grid Margin="0,0,0,14">
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="Auto"/>
+                                <RowDefinition Height="Auto"/>
+                            </Grid.RowDefinitions>
+
+                            <!-- Label Row: two independent columns -->
+                            <Grid Grid.Row="0" Margin="0,0,0,5">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="Auto"/>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="Auto"/>
+                                </Grid.ColumnDefinitions>
+                                <StackPanel Grid.Column="0" Orientation="Horizontal" VerticalAlignment="Center">
+                                    <TextBlock Text="&#xE7FE;" FontFamily="{StaticResource MaterialIcons}"
+                                               FontSize="15" Foreground="{StaticResource DarkTextSecondaryBrush}"
+                                               VerticalAlignment="Center" Margin="0,0,6,0"/>
+                                    <TextBlock Text="شناسه کاربری یا شماره پرسنلی" Style="{StaticResource FieldLabel}"/>
+                                </StackPanel>
+                                <Border Grid.Column="2" Background="{StaticResource DarkElevatedBrush}"
+                                        CornerRadius="3" Padding="5,1"
+                                        BorderBrush="#14181F" BorderThickness="1"
+                                        VerticalAlignment="Center">
+                                    <TextBlock Text="Tab ⇥" Style="{StaticResource FieldHint}"
+                                               FlowDirection="LeftToRight"/>
+                                </Border>
+                            </Grid>
+
+                            <!-- Input Row: icon | content (Border wraps background) -->
+                            <Border Grid.Row="1" x:Name="UsernameBorder" Background="{StaticResource DarkSecondaryBrush}"
+                                    BorderBrush="#14181F" BorderThickness="1" CornerRadius="6" Height="44">
+                                <Grid>
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="36"/>
+                                        <ColumnDefinition Width="*"/>
+                                    </Grid.ColumnDefinitions>
+                                    <!-- Icon column -->
+                                    <TextBlock Grid.Column="0" Text="&#xE7FE;"
+                                               FontFamily="{StaticResource MaterialIcons}" FontSize="18"
+                                               Foreground="{StaticResource DarkTextSecondaryBrush}"
+                                               HorizontalAlignment="Center" VerticalAlignment="Center"
+                                               IsHitTestVisible="False"/>
+                                    <!-- Input column -->
+                                    <TextBox x:Name="UsernameBox" Grid.Column="1"
+                                             Style="{StaticResource GamePortTextBox}"
+                                             KeyDown="UsernameBox_KeyDown"/>
+                                </Grid>
+                            </Border>
+                        </Grid>
+
+                        <!-- ===== PASSWORD FIELD ===== -->
+                        <Grid Margin="0,0,0,14">
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="Auto"/>
+                                <RowDefinition Height="Auto"/>
+                            </Grid.RowDefinitions>
+
+                            <!-- Label Row: two independent columns -->
+                            <Grid Grid.Row="0" Margin="0,0,0,5">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="Auto"/>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="Auto"/>
+                                </Grid.ColumnDefinitions>
+                                <StackPanel Grid.Column="0" Orientation="Horizontal" VerticalAlignment="Center">
+                                    <TextBlock Text="&#xE897;" FontFamily="{StaticResource MaterialIcons}"
+                                               FontSize="15" Foreground="{StaticResource DarkTextSecondaryBrush}"
+                                               VerticalAlignment="Center" Margin="0,0,6,0"/>
+                                    <TextBlock Text="رمز عبور سیستم" Style="{StaticResource FieldLabel}"/>
+                                </StackPanel>
+                                <Border Grid.Column="2" Background="{StaticResource DarkElevatedBrush}"
+                                        CornerRadius="3" Padding="5,1"
+                                        BorderBrush="#14181F" BorderThickness="1"
+                                        VerticalAlignment="Center">
+                                    <TextBlock Text="F2 تغییر کاربر" FontFamily="JetBrains Mono" FontSize="10"
+                                               Foreground="{StaticResource DarkAccentBrush}"
+                                               FlowDirection="LeftToRight"/>
+                                </Border>
+                            </Grid>
+
+                            <!-- Input Row: icon | content | eye -->
+                            <Border Grid.Row="1" x:Name="PasswordBorder" Background="{StaticResource DarkSecondaryBrush}"
+                                    BorderBrush="#14181F" BorderThickness="1" CornerRadius="6" Height="44">
+                                <Grid>
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="36"/>
+                                        <ColumnDefinition Width="*"/>
+                                        <ColumnDefinition Width="36"/>
+                                    </Grid.ColumnDefinitions>
+                                    <!-- Lock icon -->
+                                    <TextBlock Grid.Column="0" Text="&#xE897;"
+                                               FontFamily="{StaticResource MaterialIcons}" FontSize="18"
+                                               Foreground="{StaticResource DarkTextSecondaryBrush}"
+                                               HorizontalAlignment="Center" VerticalAlignment="Center"
+                                               IsHitTestVisible="False"/>
+                                    <!-- PasswordBox (hidden state) -->
+                                    <PasswordBox x:Name="PasswordBox" Grid.Column="1"
+                                                 Style="{StaticResource GamePortPasswordBox}"
+                                                 PasswordChanged="PasswordBox_PasswordChanged"
+                                                 KeyDown="PasswordBox_KeyDown"/>
+                                    <!-- Reveal TextBox (visible state) -->
+                                    <TextBox x:Name="PasswordRevealBox" Grid.Column="1"
+                                             Style="{StaticResource GamePortRevealBox}"
+                                             Visibility="Collapsed"
+                                             TextChanged="PasswordRevealBox_TextChanged"
+                                             KeyDown="PasswordBox_KeyDown"/>
+                                    <!-- Eye toggle -->
+                                    <ToggleButton x:Name="PasswordToggle" Grid.Column="2"
+                                                  Style="{StaticResource EyeToggleButton}"
+                                                  Click="PasswordToggle_Click"
+                                                  ToolTip="نمایش/مخفی‌سازی رمز">
+                                        <TextBlock x:Name="EyeIcon" Text="&#xE8F4;"
+                                                   FontFamily="{StaticResource MaterialIcons}" FontSize="18"
+                                                   Foreground="{StaticResource DarkTextSecondaryBrush}"
+                                                   VerticalAlignment="Center" HorizontalAlignment="Center"/>
+                                    </ToggleButton>
+                                </Grid>
+                            </Border>
+                        </Grid>
+
+                        <!-- ===== REMEMBER ROW ===== -->
+                        <Grid Margin="0,0,0,4" Height="24">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="Auto"/>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="Auto"/>
+                            </Grid.ColumnDefinitions>
+                            <CheckBox x:Name="RememberCheck" Grid.Column="0" IsChecked="True"
+                                      VerticalAlignment="Center" Cursor="Hand">
+                                <CheckBox.Template>
+                                    <ControlTemplate TargetType="CheckBox">
+                                        <StackPanel Orientation="Horizontal" Cursor="Hand">
+                                            <Border x:Name="Box" Width="15" Height="15" CornerRadius="3"
+                                                    Background="{StaticResource DarkElevatedBrush}"
+                                                    BorderBrush="#14181F" BorderThickness="1" VerticalAlignment="Center">
+                                                <Path x:Name="Check" Data="M2,7.5 L5.5,11 L13,2.5"
+                                                      Stroke="White" StrokeThickness="2"
+                                                      Visibility="Collapsed" Stretch="None" Margin="1"/>
+                                            </Border>
+                                            <ContentPresenter Margin="7,0,0,0" VerticalAlignment="Center"/>
+                                        </StackPanel>
+                                        <ControlTemplate.Triggers>
+                                            <Trigger Property="IsChecked" Value="True">
+                                                <Setter TargetName="Box" Property="Background" Value="{StaticResource DarkAccentBrush}"/>
+                                                <Setter TargetName="Box" Property="BorderBrush" Value="{StaticResource DarkAccentBrush}"/>
+                                                <Setter TargetName="Check" Property="Visibility" Value="Visible"/>
+                                            </Trigger>
+                                        </ControlTemplate.Triggers>
+                                    </ControlTemplate>
+                                </CheckBox.Template>
+                                <TextBlock Text="ذخیره شناسه در این صندوق" FontSize="12"
+                                           Foreground="{StaticResource DarkTextSecondaryBrush}"/>
+                            </CheckBox>
+                            <Border Grid.Column="2" Background="{StaticResource DarkElevatedBrush}"
+                                    CornerRadius="3" Padding="5,1"
+                                    BorderBrush="#14181F" BorderThickness="1"
+                                    VerticalAlignment="Center">
+                                <TextBlock Text="[ Enter ↵ ]" FontFamily="JetBrains Mono" FontSize="10"
+                                           Foreground="{StaticResource DarkTextTertiaryBrush}"
+                                           FlowDirection="LeftToRight"/>
+                            </Border>
+                        </Grid>
+
+                        <!-- ===== LOGIN BUTTON ===== -->
+                        <Button x:Name="LoginButton" Style="{StaticResource GamePortPrimaryButton}"
+                                Margin="0,10,0,0" Click="LoginButton_Click">
+                            <StackPanel Orientation="Horizontal" HorizontalAlignment="Center"
+                                        VerticalAlignment="Center">
+                                <TextBlock x:Name="LoginIcon" Text="&#xE770;"
+                                           FontFamily="{StaticResource MaterialIcons}" FontSize="18"
+                                           Foreground="White" VerticalAlignment="Center" Margin="0,0,8,0"/>
+                                <TextBlock x:Name="LoginButtonText" Text="ورود به سیستم"
+                                           FontSize="14" FontWeight="SemiBold"
+                                           Foreground="White" VerticalAlignment="Center"/>
+                                <TextBlock x:Name="LoginEnterHint" Text="  [ Enter ↵ ]"
+                                           FontFamily="JetBrains Mono" FontSize="11"
+                                           Foreground="White" Opacity="0.6"
+                                           VerticalAlignment="Center" FlowDirection="LeftToRight"/>
+                            </StackPanel>
+                        </Button>
+
+                        <!-- Loading -->
+                        <Border x:Name="LoadingIndicator" Visibility="Collapsed"
+                                Margin="0,8,0,0" HorizontalAlignment="Center">
+                            <TextBlock Text="در حال اعتبارسنجی..." FontSize="12"
+                                       Foreground="{StaticResource DarkTextSecondaryBrush}" VerticalAlignment="Center"/>
+                        </Border>
+                    </StackPanel>
+
+                    <!-- ROW 4: Infrastructure -->
+                    <StackPanel Grid.Row="4" x:Name="InfraSection" Margin="0,12,0,0">
+                        <Border BorderBrush="#14181F" BorderThickness="0,1,0,0" Padding="0,10,0,0">
+                            <Border Style="{StaticResource StatusCard}">
+                                <StackPanel>
+                                    <!-- Header row -->
+                                    <Grid Margin="0,0,0,8">
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="Auto"/>
+                                            <ColumnDefinition Width="*"/>
+                                            <ColumnDefinition Width="Auto"/>
+                                        </Grid.ColumnDefinitions>
+                                        <StackPanel Grid.Column="0" Orientation="Horizontal" VerticalAlignment="Center">
+                                            <TextBlock Text="&#xE30D;" FontFamily="{StaticResource MaterialIcons}"
+                                                       FontSize="15" Foreground="{StaticResource DarkAccentBrush}"
+                                                       VerticalAlignment="Center" Margin="0,0,6,0"/>
+                                            <TextBlock Text="وضعیت زیرساخت و پایداری شبکه" FontSize="12"
+                                                       FontWeight="Medium" Foreground="{StaticResource DarkTextPrimaryBrush}"
+                                                       VerticalAlignment="Center" TextTrimming="CharacterEllipsis"
+                                                       MaxWidth="200"/>
+                                        </StackPanel>
+                                        <Border Grid.Column="2" Style="{StaticResource StatusBadge}" x:Name="OfflineBadge">
+                                            <TextBlock Text="OFFLINE-FIRST ACTIVE" FontFamily="JetBrains Mono"
+                                                       FontSize="9" FontWeight="Bold"
+                                                       Foreground="{StaticResource DarkReadyBrush}"
+                                                       FlowDirection="LeftToRight"/>
+                                        </Border>
+                                    </Grid>
+
+                                    <!-- DB Row -->
+                                    <Border Style="{StaticResource SubRow}" Margin="0,0,0,5">
+                                        <Grid>
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="Auto"/>
+                                                <ColumnDefinition Width="Auto"/>
+                                                <ColumnDefinition Width="*"/>
+                                                <ColumnDefinition Width="Auto"/>
+                                            </Grid.ColumnDefinitions>
+                                            <Ellipse Grid.Column="0" Width="7" Height="7"
+                                                     Fill="{StaticResource DarkReadyBrush}"
+                                                     VerticalAlignment="Center"/>
+                                            <TextBlock Grid.Column="1" Text="آماده و متصل" FontSize="11"
+                                                       Foreground="{StaticResource DarkReadyBrush}" FontWeight="Medium"
+                                                       VerticalAlignment="Center" Margin="6,0,8,0"/>
+                                            <TextBlock Grid.Column="2" Text="PostgreSQL Engine:" FontSize="11"
+                                                       Foreground="{StaticResource DarkTextSecondaryBrush}"
+                                                       VerticalAlignment="Center" FlowDirection="LeftToRight"
+                                                       TextTrimming="CharacterEllipsis"/>
+                                            <TextBlock Grid.Column="3" Text="Ping: &lt;1ms"
+                                                       Style="{StaticResource TechText}"
+                                                       VerticalAlignment="Center" FlowDirection="LeftToRight"/>
+                                        </Grid>
+                                    </Border>
+
+                                    <!-- Sync Row -->
+                                    <Border Style="{StaticResource SubRow}" Margin="0,0,0,5" x:Name="SyncRow">
+                                        <Grid>
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="Auto"/>
+                                                <ColumnDefinition Width="Auto"/>
+                                                <ColumnDefinition Width="*"/>
+                                                <ColumnDefinition Width="Auto"/>
+                                            </Grid.ColumnDefinitions>
+                                            <Ellipse Grid.Column="0" Width="7" Height="7"
+                                                     Fill="{StaticResource DarkAccentBrush}"
+                                                     VerticalAlignment="Center"/>
+                                            <TextBlock Grid.Column="1" Text="همگام‌سازی بی‌درنگ" FontSize="11"
+                                                       Foreground="{StaticResource DarkAccentBrush}" FontWeight="Medium"
+                                                       VerticalAlignment="Center" Margin="6,0,8,0"/>
+                                            <TextBlock Grid.Column="2" Text="سرور ابری:" FontSize="11"
+                                                       Foreground="{StaticResource DarkTextSecondaryBrush}"
+                                                       VerticalAlignment="Center"
+                                                       TextTrimming="CharacterEllipsis"/>
+                                            <TextBlock Grid.Column="3" Text="Sync: 1m ago"
+                                                       Style="{StaticResource TechText}"
+                                                       VerticalAlignment="Center" FlowDirection="LeftToRight"/>
+                                        </Grid>
+                                    </Border>
+
+                                    <!-- Offline note + port -->
+                                    <Grid Margin="0,4,0,0" x:Name="OfflineNote">
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="Auto"/>
+                                            <ColumnDefinition Width="*"/>
+                                            <ColumnDefinition Width="Auto"/>
+                                        </Grid.ColumnDefinitions>
+                                        <StackPanel Grid.Column="0" Orientation="Horizontal" VerticalAlignment="Center">
+                                            <TextBlock Text="&#xE86C;" FontFamily="{StaticResource MaterialIcons}"
+                                                       FontSize="13" Foreground="{StaticResource DarkReadyBrush}"
+                                                       VerticalAlignment="Center" Margin="0,0,4,0"/>
+                                            <TextBlock Text="عملکرد ۱۰۰٪ مستقل در زمان قطعی کامل اینترنت"
+                                                       FontSize="11" Foreground="{StaticResource DarkTextSecondaryBrush}"
+                                                       VerticalAlignment="Center" TextTrimming="CharacterEllipsis"
+                                                       MaxWidth="280"/>
+                                        </StackPanel>
+                                        <TextBlock Grid.Column="2" Text="PORT: 5432" Style="{StaticResource TechText}"
+                                                   VerticalAlignment="Center" FlowDirection="LeftToRight"/>
+                                    </Grid>
+                                </StackPanel>
+                            </Border>
+                        </Border>
+                    </StackPanel>
+
+                    <!-- ROW 5: Footer -->
+                    <Grid Grid.Row="5" Margin="0,6,0,0" x:Name="FooterSection">
+                        <TextBlock x:Name="VersionText" Text="" FontFamily="JetBrains Mono"
+                                   FontSize="10" Foreground="{StaticResource DarkTextTertiaryBrush}"
+                                   HorizontalAlignment="Right" FlowDirection="LeftToRight"/>
+                        <TextBlock Text="پشتیبانی: ۰۲۱-۸۸۸۸۴۳۲۱" FontSize="10"
+                                   Foreground="{StaticResource DarkTextTertiaryBrush}"
+                                   HorizontalAlignment="Left"/>
+                    </Grid>
+                </Grid>
+            </Border>
+        </Grid>
     </Grid>
 </UserControl>

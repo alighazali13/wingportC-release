@@ -8,12 +8,24 @@
     <UseWPF>true</UseWPF>
     <RootNamespace>GamePort.Cashier</RootNamespace>
     <AssemblyName>GamePort.Cashier</AssemblyName>
-    <Version>1.0.0</Version>
-    <AssemblyVersion>1.0.0</AssemblyVersion>
-    <FileVersion>1.0.0</FileVersion>
     <Company>GamePort</Company>
-    <Product>WingPort Cashier</Product>
-    <Copyright>© 2024 GamePort</Copyright>
+    <Product>GamePort Cashier</Product>
+    <Copyright>© 2026 GamePort</Copyright>
+
+    <!-- Version: single source of truth. Release script injects via /p:Version=... -->
+    <Version>2.0.0-beta.3</Version>
+    <AssemblyVersion>2.0.0.0</AssemblyVersion>
+    <FileVersion>2.0.0.0</FileVersion>
+    <InformationalVersion>$(Version)</InformationalVersion>
+  </PropertyGroup>
+
+  <!-- Publish-specific settings (only apply during dotnet publish) -->
+  <PropertyGroup Condition="'$(Configuration)' == 'Release'">
+    <RuntimeIdentifier>win-x64</RuntimeIdentifier>
+    <SelfContained>true</SelfContained>
+    <PublishSingleFile>false</PublishSingleFile>
+    <PublishTrimmed>false</PublishTrimmed>
+    <ReadyToRun>false</ReadyToRun>
   </PropertyGroup>
 
   <ItemGroup>
@@ -36,11 +48,16 @@
     <PackageReference Include="Serilog.Enrichers.Thread" Version="4.0.0" />
     <PackageReference Include="Microsoft.Extensions.Configuration.Json" Version="9.0.0" />
     <PackageReference Include="Microsoft.Extensions.Configuration.Abstractions" Version="9.0.0" />
+    <PackageReference Include="Velopack" Version="1.2.161" />
   </ItemGroup>
 
   <ItemGroup>
+    <!-- appsettings.json intentionally NOT published to Velopack packages.
+         It contains development DB credentials. The app bootstraps its own
+         config from %LocalAppData%\GamePort\Cashier\ on first run. -->
     <None Update="appsettings.json">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      <CopyToPublishDirectory>Never</CopyToPublishDirectory>
     </None>
   </ItemGroup>
 

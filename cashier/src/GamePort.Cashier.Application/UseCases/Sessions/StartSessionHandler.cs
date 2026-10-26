@@ -10,6 +10,7 @@ public class StartSessionHandler
 {
     private readonly ICustomerRepository _customers;
     private readonly IDeviceRepository _devices;
+    private readonly IZoneRepository _zones;
     private readonly ISessionRepository _sessions;
     private readonly IPricingRuleRepository _pricingRules;
     private readonly IReservationRepository _reservations;
@@ -20,6 +21,7 @@ public class StartSessionHandler
     public StartSessionHandler(
         ICustomerRepository customers,
         IDeviceRepository devices,
+        IZoneRepository zones,
         ISessionRepository sessions,
         IPricingRuleRepository pricingRules,
         IReservationRepository reservations,
@@ -29,6 +31,7 @@ public class StartSessionHandler
     {
         _customers = customers;
         _devices = devices;
+        _zones = zones;
         _sessions = sessions;
         _pricingRules = pricingRules;
         _reservations = reservations;
@@ -51,9 +54,13 @@ public class StartSessionHandler
             return Result<StartSessionResult>.Failure("دستگاه یافت نشد.");
         }
 
-        if (device.Status == DeviceStatus.InUse)
+        // Atomic eligibility guard: deleted, inactive, Maintenance, InUse and
+        // inactive/deleted Zone ancestors all reject new sessions.
+        var eligibilityError = await DeviceEligibilityGuard.CheckNewUsageAsync(
+            device, _zones, requireNotInUse: true, cancellationToken);
+        if (eligibilityError is not null)
         {
-            return Result<StartSessionResult>.Failure("دستگاه در حال حاضر در حال استفاده است.");
+            return Result<StartSessionResult>.Failure(eligibilityError);
         }
 
         var customerSessions = await _sessions.GetByCustomerIdAsync(command.CustomerId);
@@ -109,7 +116,7 @@ public class StartSessionHandler
         {
             await _sessions.CreateAsync(session);
 
-            device.Status = DeviceStatus.InUse;
+            DeviceStateTransitions.MarkSessionStart(device);
             await _devices.UpdateAsync(device);
 
             if (reservation is not null)

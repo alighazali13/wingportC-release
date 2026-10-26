@@ -28,6 +28,8 @@ public class CashierServerCompositionTests
         var scoped = scope.ServiceProvider;
 
         Assert.NotNull(scoped.GetRequiredService<IDeviceRepository>());
+        Assert.NotNull(scoped.GetRequiredService<IZoneRepository>());
+        Assert.NotNull(scoped.GetRequiredService<IPricingGroupRepository>());
         Assert.NotNull(scoped.GetRequiredService<ICustomerRepository>());
         Assert.NotNull(scoped.GetRequiredService<ISessionRepository>());
         Assert.NotNull(scoped.GetRequiredService<IPricingRuleRepository>());
@@ -38,6 +40,10 @@ public class CashierServerCompositionTests
         Assert.NotNull(scoped.GetRequiredService<IDeviceAuthenticator>());
         Assert.NotNull(scoped.GetRequiredService<IUnitOfWork>());
         Assert.NotNull(scoped.GetRequiredService<RegisterDeviceHandler>());
+        Assert.NotNull(scoped.GetRequiredService<UpdateDeviceHandler>());
+        Assert.NotNull(scoped.GetRequiredService<SetDeviceActivationHandler>());
+        Assert.NotNull(scoped.GetRequiredService<SetDeviceOperationalStatusHandler>());
+        Assert.NotNull(scoped.GetRequiredService<DeleteDeviceHandler>());
         Assert.NotNull(scoped.GetRequiredService<StartSessionHandler>());
         Assert.NotNull(scoped.GetRequiredService<EndSessionHandler>());
         Assert.NotNull(provider.GetRequiredService<IDeviceConnectionManager>());
