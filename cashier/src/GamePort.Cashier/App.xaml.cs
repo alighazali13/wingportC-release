@@ -59,7 +59,9 @@ public partial class App : System.Windows.Application
                         app.UseAuthorization();
                         app.UseEndpoints(endpoints =>
                         {
-                            endpoints.MapCashierApi();
+                            // MapCashierServer = /health + SignalR /hubs/client + MapCashierApi.
+                            // Devices cannot connect without the hub being mapped.
+                            endpoints.MapCashierServer();
                         });
                     });
                 })

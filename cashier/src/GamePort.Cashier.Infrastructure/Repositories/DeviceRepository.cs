@@ -79,15 +79,4 @@ public class DeviceRepository : IDeviceRepository
                 ex);
         }
     }
-
-    public async Task DeleteAsync(Guid id)
-    {
-        var device = await _context.Devices.FirstOrDefaultAsync(d => d.Id == id);
-        if (device != null)
-        {
-            device.IsDeleted = true;
-            device.UpdatedAt = DateTime.UtcNow;
-            await _context.SaveChangesAsync();
-        }
-    }
 }

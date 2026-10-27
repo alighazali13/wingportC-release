@@ -53,6 +53,22 @@ public class HardeningTests
     }
 
     [Fact]
+    public async Task ExceptionMiddleware_MapsConcurrencyConflictToConflict()
+    {
+        var middleware = new ApiExceptionMiddleware(
+            _ => throw new ConcurrencyConflictException("نسخه منسوخ شده است."),
+            NullLogger<ApiExceptionMiddleware>.Instance);
+
+        var context = CreateContext();
+
+        await middleware.InvokeAsync(context);
+
+        Assert.Equal(StatusCodes.Status409Conflict, context.Response.StatusCode);
+        var body = await ReadBodyAsync(context);
+        Assert.Contains("نسخه منسوخ شده است.", body);
+    }
+
+    [Fact]
     public async Task ExceptionMiddleware_HidesInternalErrorDetails()
     {
         var middleware = new ApiExceptionMiddleware(

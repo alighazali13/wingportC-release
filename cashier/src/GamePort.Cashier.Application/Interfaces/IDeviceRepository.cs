@@ -10,5 +10,4 @@ public interface IDeviceRepository
     Task<IEnumerable<Device>> GetByTypeAsync(Domain.Enums.DeviceType type);
     Task<Device> CreateAsync(Device device);
     Task UpdateAsync(Device device);
-    Task DeleteAsync(Guid id);
 }

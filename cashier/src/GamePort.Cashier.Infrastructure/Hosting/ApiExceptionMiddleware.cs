@@ -29,6 +29,13 @@ public class ApiExceptionMiddleware
         {
             await _next(context);
         }
+        catch (ConcurrencyConflictException ex)
+        {
+            // Optimistic-concurrency failures are conflicts, not validation errors:
+            // uncaught ones (e.g. session handlers) must surface as 409, not 400.
+            _logger.LogWarning(ex, "Concurrency conflict on {Method} {Path}.", context.Request.Method, context.Request.Path);
+            await WriteErrorAsync(context, StatusCodes.Status409Conflict, ex.Message);
+        }
         catch (DomainException ex)
         {
             _logger.LogWarning(ex, "Domain rule violation on {Method} {Path}.", context.Request.Method, context.Request.Path);
